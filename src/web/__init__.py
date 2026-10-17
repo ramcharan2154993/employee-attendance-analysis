@@ -1,7 +1,7 @@
-"""Flask application factory and configuration for Employee Attendance Analysis System."""
-
+import hmac
+import secrets
 from typing import Any
-from flask import Flask, current_app, g, render_template
+from flask import Flask, current_app, g, render_template, request, session
 import mysql.connector
 import config
 from src.db import get_connection, require_test_database
@@ -17,6 +17,8 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         DATABASE_NAME=None,
         OUTPUT_DIR="output",
         TESTING=False,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
     )
 
     if test_config:
@@ -83,9 +85,41 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     def value_error(error: ValueError) -> tuple[str, int]:
         return render_template("error.html", message=f"Error: {error}"), 400
 
+    @app.context_processor
+    def inject_csrf_token() -> dict[str, Any]:
+        def csrf_token() -> str:
+            if "csrf_token" not in session:
+                session["csrf_token"] = secrets.token_hex(16)
+            return session["csrf_token"]
+
+        return {"csrf_token": csrf_token}
+
+    @app.before_request
+    def check_csrf_token() -> Any:
+        if request.method == "POST":
+            if request.url_rule is None:
+                return None
+            token_form = request.form.get("csrf_token")
+            token_session = session.get("csrf_token")
+            if (
+                not token_form
+                or not token_session
+                or not hmac.compare_digest(token_form, token_session)
+            ):
+                return (
+                    render_template(
+                        "error.html",
+                        message="Error: invalid or missing form token.",
+                    ),
+                    400,
+                )
+        return None
+
     from src.web.routes import bp
+    from src.web.write_routes import write_bp
 
     app.register_blueprint(bp)
+    app.register_blueprint(write_bp)
 
     return app
 

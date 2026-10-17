@@ -28,6 +28,7 @@
                 <th>Name</th>
                 <th>Department</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -43,10 +44,16 @@
                     <span class="badge-inactive">Inactive</span>
                     {% endif %}
                 </td>
+                <td>
+                    {% if emp.is_active %}
+                    <a href="/employees/{{ emp.employee_code }}/edit" style="color: var(--primary); margin-right: 0.75rem;">Edit</a>
+                    <a href="/employees/{{ emp.employee_code }}/deactivate" style="color: var(--danger);">Deactivate</a>
+                    {% endif %}
+                </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="4">No employees found.</td>
+                <td colspan="5">No employees found.</td>
             </tr>
             {% endfor %}
         </tbody>

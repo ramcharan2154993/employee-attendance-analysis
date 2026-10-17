@@ -129,13 +129,26 @@
             <strong style="color: var(--primary); font-size: 1.1rem; margin-right: 1rem;">Attendance System</strong>
             <a href="/">Dashboard</a>
             <a href="/employees">Employees</a>
+            <a href="/employees/new">Add employee</a>
             <a href="/attendance">Attendance</a>
+            <a href="/attendance/new">Record attendance</a>
+            <a href="/attendance/correct">Correct attendance</a>
+            <a href="/holidays/new">Record holiday</a>
             <a href="/summary/employees">Employee Summary</a>
             <a href="/summary/departments">Department Summary</a>
             <a href="/ranking">Absenteeism Ranking</a>
         </nav>
     </header>
     <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="card" style="border-color: var(--primary); margin-bottom: 1rem;">
+                    {% for message in messages %}
+                        <p style="margin: 0.25rem 0;">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </main>
 </body>

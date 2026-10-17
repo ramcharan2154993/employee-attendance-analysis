@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{{ title }}</h1>
+    {% if error %}
+    <p style="color: var(--danger); font-weight: 500;">{{ error }}</p>
+    {% endif %}
+    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1rem; max-width: 480px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label for="holiday_date" style="display: block; margin-bottom: 0.25rem;">Holiday Date:</label>
+            <input type="date" id="holiday_date" name="holiday_date" value="{{ holiday_date }}" required style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+            <button type="submit">Submit</button>
+            <a href="/attendance" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Deactivate Employee - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card" style="border-color: var(--danger);">
+    <h1 style="color: var(--danger);">Deactivate Employee</h1>
+    <p style="font-size: 1.1rem;">
+        Deactivate {{ employee.employee_code }} - {{ employee.employee_name }}? This cannot be undone from the website.
+    </p>
+    <form action="/employees/{{ employee.employee_code }}/deactivate" method="post" style="display: flex; flex-direction: column; gap: 1rem; max-width: 480px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label for="confirm" style="display: block; margin-bottom: 0.25rem;">Type YES to confirm:</label>
+            <input type="text" id="confirm" name="confirm" required style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+            <button type="submit" style="background: var(--danger);">Confirm Deactivation</button>
+            <a href="/employees" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

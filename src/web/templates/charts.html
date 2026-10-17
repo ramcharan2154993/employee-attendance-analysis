@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Charts - {{ "%04d-%02d"|format(year, month) }} - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Visual Charts ({{ "%04d-%02d"|format(year, month) }})</h1>
+    <p style="color: var(--text-muted);">Attendance trends and absenteeism ranking for the selected period.</p>
+</div>
+
+<div class="card">
+    <h2>Absenteeism Ranking</h2>
+    <img src="/charts/file/{{ chart1 }}" alt="Absenteeism Ranking Chart" class="chart-img">
+</div>
+
+<div class="card">
+    <h2>Monthly Attendance Trends</h2>
+    <img src="/charts/file/{{ chart2 }}" alt="Monthly Attendance Trends Chart" class="chart-img">
+</div>
+{% endblock %}

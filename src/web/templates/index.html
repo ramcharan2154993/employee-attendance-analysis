@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Employee Attendance Analysis System</h1>
+    <p style="font-size: 1.1rem; color: var(--text-muted);">
+        Active Employees: <strong style="color: var(--accent);">{{ active_count }}</strong>
+    </p>
+</div>
+
+<div class="card">
+    <h2>Monthly Report Generation</h2>
+    <form action="/report" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label for="year">Year: </label>
+            <input type="number" id="year" name="year" value="2026" required style="width: 100px;">
+        </div>
+        <div>
+            <label for="month">Month: </label>
+            <input type="number" id="month" name="month" min="1" max="12" value="9" required style="width: 80px;">
+        </div>
+        <button type="submit">View Monthly Report</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Chart Exports</h2>
+    <form action="/charts" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label for="chart_year">Year: </label>
+            <input type="number" id="chart_year" name="year" value="2026" required style="width: 100px;">
+        </div>
+        <div>
+            <label for="chart_month">Month: </label>
+            <input type="number" id="chart_month" name="month" min="1" max="12" value="9" required style="width: 80px;">
+        </div>
+        <button type="submit">View Visual Charts</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Quick Navigation</h2>
+    <ul>
+        <li><a href="/employees">Employee Directory</a> - View active and inactive staff, search profiles.</li>
+        <li><a href="/attendance">Attendance Log</a> - Inspect daily employee records and filter by date.</li>
+        <li><a href="/summary/employees">Employee Summary Table</a> - Aggregated attendance metrics per employee.</li>
+        <li><a href="/summary/departments">Department Summary Table</a> - Organization-wide department statistics.</li>
+        <li><a href="/ranking">Absenteeism Ranking</a> - Employees ranked by absenteeism rate.</li>
+    </ul>
+</div>
+{% endblock %}

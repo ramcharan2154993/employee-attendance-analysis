@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Employees - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Employees</h1>
+    <form action="/employees" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label for="q">Search: </label>
+            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Name or department...">
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" name="include_inactive" value="1"{% if include_inactive %} checked{% endif %}>
+                Include inactive
+            </label>
+        </div>
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td>{{ emp.employee_code }}</td>
+                <td>{{ emp.employee_name }}</td>
+                <td>{{ emp.department }}</td>
+                <td>
+                    {% if emp.is_active %}
+                    <span class="badge-active">Active</span>
+                    {% else %}
+                    <span class="badge-inactive">Inactive</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No employees found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

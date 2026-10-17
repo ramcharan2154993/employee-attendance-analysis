@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Attendance Records</h1>
+    <form action="/attendance" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label for="employee">Employee Code: </label>
+            <input type="text" id="employee" name="employee" value="{{ employee }}" placeholder="e.g. E001">
+        </div>
+        <div>
+            <label for="start">Start Date: </label>
+            <input type="date" id="start" name="start" value="{{ start }}">
+        </div>
+        <div>
+            <label for="end">End Date: </label>
+            <input type="date" id="end" name="end" value="{{ end }}">
+        </div>
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="card">
+    {% if records %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Employee Code</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in records %}
+            <tr>
+                <td>{{ rec.attendance_date }}</td>
+                <td>{{ rec.employee_code }}</td>
+                <td>{{ rec.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No records found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -68,4 +68,4 @@ pytest. Tests never touch real data: they refuse to run unless the database name
 7. Stop when the task ends.
 
 ## Status (update honestly)
-Nothing is built yet. All requirements: Not started. See PROGRESS.md for details.
+All planned phases are built and tested. See PROGRESS.md for evidence and README.md for known limitations.

@@ -30,6 +30,7 @@ NF-01 Not started | NF-02 Not started | NF-03 Not started
 
 ## Decisions made (by the project owner)
 - D1 to D5 approved: holiday rows per employee, leave counts in the denominator, department % by total days, deactivate not delete, command-line menu. Details are in PROJECT_CONTEXT.md.
+- D6 (changes D5): a Flask web interface is added after the menu; the command-line menu stays. Safety rules are in PROJECT_CONTEXT.md.
 
 ## Problems we hit and how we fixed them
 (Add one line each time something breaks, with the cause and the fix.)

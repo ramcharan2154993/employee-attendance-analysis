@@ -1,10 +1,10 @@
 # PROJECT_CONTEXT.md: Employee Attendance Analysis System
 
 ## What this is
-A beginner Python project. MySQL stores employees and daily attendance. Python reads it, Pandas groups and counts, NumPy does percentages, Matplotlib draws charts. Output: monthly report, employee attendance %, department summary, absenteeism chart. Interface: simple command-line menu (no web framework).
+A beginner Python project. MySQL stores employees and daily attendance. Python reads it, Pandas groups and counts, NumPy does percentages, Matplotlib draws charts. Output: monthly report, employee attendance %, department summary, absenteeism chart. Interface: a simple command-line menu (src/main.py) and a Flask web app (src/web/), both calling the same modules. Neither interface contains SQL or percentage formulas.
 
 ## Stack (do not add other packages without asking)
-mysql-connector-python, pandas, numpy, matplotlib, python-dotenv, pytest. MySQL is the main database. No SQLite, no CSV as the main store. Load query results into Pandas from the cursor (fetchall), not with read_sql.
+mysql-connector-python, pandas, numpy, matplotlib, python-dotenv, pytest, flask. No other web packages (no Flask-WTF, no Flask-SQLAlchemy, no Flask-Login). MySQL is the main database. No SQLite, no CSV as the main store. Load query results into Pandas from the cursor (fetchall), not with read_sql.
 
 ## Environment
 Windows. Terminal: Antigravity terminal (PowerShell). A virtual environment lives in ./venv. Always run Python and pip through it, for example: .\venv\Scripts\python.exe script.py and .\venv\Scripts\python.exe -m pip install ... Do not rely on (venv) showing in the terminal. Do not change any PowerShell or Windows setting.
@@ -36,9 +36,10 @@ docs/rules.md
 src/__init__.py, db.py, employees.py, attendance.py, calculations.py, analysis.py, reports.py, visualizations.py, main.py
 tests/test_employees.py, test_attendance.py, test_calculations.py, test_reports.py
 output/.gitkeep
+Web (added later): src/web/__init__.py (create_app), src/web/routes.py, src/web/templates/ (HTML files), tests/test_web.py
 
 ## Environment variables (names only, values live in .env)
-DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME
+DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME, FLASK_SECRET_KEY
 
 ## Security rules
 - Never hardcode, print, or log passwords. Never open, create, edit, or print the .env file.
@@ -46,6 +47,10 @@ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME
 - Parameterized SQL only (never build SQL with f-strings or string joins).
 - Never use the MySQL root account in the project.
 - Sample data is clearly fake. No real people.
+- Web app: runs only on 127.0.0.1 with debug mode OFF. There is no login, so it must never be exposed to a network.
+- Web app: FLASK_SECRET_KEY comes only from .env, is never printed or hardcoded.
+- Web app: every form that changes data checks a CSRF token kept in the Flask session (no extra packages). Templates rely on Jinja auto-escaping; never use the "safe" filter or Markup on user text.
+- Web app: no SQL and no percentage formulas in src/web. Pages never delete anything.
 
 ## Code rules
 Beginner-friendly. Meaningful names. Type hints. A short docstring on every public function. Handle expected errors (duplicate, bad status, missing employee) with clear messages. Never hide an exception silently. Keep calculations free of database code so they can be tested alone. No unrequested features.

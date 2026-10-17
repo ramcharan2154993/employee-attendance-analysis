@@ -11,11 +11,26 @@ def _validate_counts(present: int, absent: int, leave: int) -> None:
         raise ValueError(f"Leave count cannot be negative: {leave}")
 
 
+import numpy as np
+
+
+def calculate_percentages(numerators, denominators) -> np.ndarray:
+    """Calculate percentages element-wise using NumPy.
+
+    Returns a float array of (numerator / denominator * 100), with NaN where denominator is 0.
+    """
+    num = np.asarray(numerators, dtype=float)
+    den = np.asarray(denominators, dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(den == 0, np.nan, (num / den) * 100.0)
+
+
 def _percentage(numerator: int, denominator: int) -> float | None:
     """Calculate percentage from numerator and denominator, or None if denominator is 0."""
-    if denominator == 0:
+    res = calculate_percentages([numerator], [denominator])[0]
+    if np.isnan(res):
         return None
-    return (numerator / denominator) * 100
+    return float(res)
 
 
 def eligible_days(present: int, absent: int, leave: int) -> int:

@@ -85,3 +85,17 @@ def test_negative_counts_raise_value_error():
         calculate_attendance_percentage(0, 0, -1)
     with pytest.raises(ValueError):
         calculate_absenteeism_percentage(0, 0, -1)
+
+
+def test_calculate_percentages():
+    """calculate_percentages([15, 0], [20, 0]) gives [75.0, NaN]; calculate_percentages([1], [3]) is approx 33.3333."""
+    import numpy as np
+    from src.calculations import calculate_percentages
+
+    res = calculate_percentages([15, 0], [20, 0])
+    assert res[0] == 75.0
+    assert np.isnan(res[1])
+
+    res2 = calculate_percentages([1], [3])
+    assert pytest.approx(33.3333, abs=1e-4) == res2[0]
+    assert res2[0] != 33.33

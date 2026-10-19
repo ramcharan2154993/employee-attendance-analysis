@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from "_components.html" import kpi_card, avatar_circle, status_pill, empty_state %}
 
-{% block title %}Attendance Overview - Employee Attendance Analysis System{% endblock %}
+{% block title %}Dashboard · {{ APP_NAME }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block extra_head %}
 <meta http-equiv="refresh" content="60">
@@ -11,8 +12,8 @@
 <!-- Page Header -->
 <div class="page-header">
     <div class="page-header-text">
-        <h1 class="page-header-title">Attendance Overview</h1>
-        <p class="page-header-subtitle">Real-time health indicators of your organization's human capital and attendance dynamics.</p>
+        <h1 class="page-header-title">Dashboard</h1>
+        <p class="page-header-subtitle">{{ APP_TAGLINE }}</p>
     </div>
     <div class="page-header-actions">
         <a href="/?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary" title="Refresh Dashboard Data (Auto-refreshes every 60s)">

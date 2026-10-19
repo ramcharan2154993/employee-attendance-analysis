@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}User Management - Employee Attendance Analysis System{% endblock %}
+{% block title %}User Accounts · {{ APP_NAME }}{% endblock %}
+{% block page_title %}User Accounts{% endblock %}
 
 {% block content %}
 <div class="actions-bar">
@@ -11,9 +12,9 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
         <div>
-            <h1 style="font-size: 1.4rem; color: #0f172a; margin: 0 0 0.25rem 0;">System User Accounts</h1>
+            <h1 style="font-size: 1.4rem; color: #0f172a; margin: 0 0 0.25rem 0;">User Accounts</h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
-                Role-based access control. Authorized accounts can access HR workflows and administration.
+                System User Accounts &bull; Role-based access control. Authorized accounts can access HR workflows and administration.
             </p>
         </div>
         <span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.85rem; padding: 4px 10px;">

@@ -829,7 +829,7 @@ def test_active_nav_indicators(client: Any) -> None:
 
     res_rep = client.get("/summary/employees")
     assert res_rep.status_code == 200
-    assert 'href="/summary/employees" class="active">Reports &amp; Analytics</a>' in res_rep.get_data(as_text=True)
+    assert 'href="/summary/employees" class="active">Reports</a>' in res_rep.get_data(as_text=True)
 
 
 def test_searchable_selectors_rich_options(client: Any, conn: Any) -> None:

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Employees - Employee Attendance Analysis System{% endblock %}
+{% block title %}Employees · {{ APP_NAME }}{% endblock %}
+{% block page_title %}Employees{% endblock %}
 
 {% block content %}
 <div class="actions-bar">
@@ -8,7 +9,7 @@
 </div>
 
 <div class="card">
-    <h1 style="margin-bottom: 1.25rem;">Employee Directory</h1>
+    <h1 style="margin-bottom: 1.25rem;">Employees</h1>
     <form action="/employees" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 220px;">
             <label for="q" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Search Staff:</label>

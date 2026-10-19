@@ -1,21 +1,57 @@
-# Secrets: never commit these
+# ==============================================================================
+# AttendIQ / Employee Attendance Analysis System — Git Ignore Configuration
+# ==============================================================================
+
+# Secrets and environment configurations
 .env
 .env.*
 !.env.example
 
-# Python
+# Python runtime and bytecode
 venv/
 .venv/
+env/
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
+*$py.class
 
-# Generated reports and charts
+# Testing and test caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.dump.sql
+*.backup.sql
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+
+# Flask instances and temporary caches
+instance/
+.webassets-cache/
+
+# Generated charts, exports, and outputs
 output/*
 !output/.gitkeep
+absenteeism_*.png
+monthly_attendance.png
 
-# Editor and system files
+# Node modules (if any tooling ever run)
+node_modules/
+
+# IDE, OS, and editor files
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea/
 .DS_Store
+Thumbs.db
+desktop.ini

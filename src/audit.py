@@ -59,11 +59,16 @@ def log_attendance_action(
 def get_audit_trail(
     conn: MySQLConnectionAbstract,
     employee_id: int | None = None,
+    employee_code: str | None = None,
     action_type: str | None = None,
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[dict[str, Any]]:
     """Retrieve immutable audit history records with employee context ordered by time descending."""
+    clean_code = employee_code.strip() if employee_code and employee_code.strip() else None
+    clean_action = action_type.strip() if action_type and action_type.strip() else None
     cursor = conn.cursor(dictionary=True)
     try:
         query = """
@@ -85,13 +90,23 @@ def get_audit_trail(
             FROM attendance_audit a
             JOIN employees e ON a.employee_id = e.employee_id
             WHERE (%s IS NULL OR a.employee_id = %s)
+              AND (%s IS NULL OR e.employee_code = %s)
               AND (%s IS NULL OR a.action_type = %s)
+              AND (%s IS NULL OR a.attendance_date >= %s)
+              AND (%s IS NULL OR a.attendance_date <= %s)
             ORDER BY a.audit_id DESC
             LIMIT %s OFFSET %s
         """
         cursor.execute(
             query,
-            (employee_id, employee_id, action_type, action_type, limit, offset),
+            (
+                employee_id, employee_id,
+                clean_code, clean_code,
+                clean_action, clean_action,
+                start_date, start_date,
+                end_date, end_date,
+                limit, offset,
+            ),
         )
         return cursor.fetchall()
     finally:
@@ -101,18 +116,36 @@ def get_audit_trail(
 def count_audit_records(
     conn: MySQLConnectionAbstract,
     employee_id: int | None = None,
+    employee_code: str | None = None,
     action_type: str | None = None,
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
 ) -> int:
     """Return total count of audit records matching optional filters."""
+    clean_code = employee_code.strip() if employee_code and employee_code.strip() else None
+    clean_action = action_type.strip() if action_type and action_type.strip() else None
     cursor = conn.cursor()
     try:
         query = """
             SELECT COUNT(*)
-            FROM attendance_audit
-            WHERE (%s IS NULL OR employee_id = %s)
-              AND (%s IS NULL OR action_type = %s)
+            FROM attendance_audit a
+            JOIN employees e ON a.employee_id = e.employee_id
+            WHERE (%s IS NULL OR a.employee_id = %s)
+              AND (%s IS NULL OR e.employee_code = %s)
+              AND (%s IS NULL OR a.action_type = %s)
+              AND (%s IS NULL OR a.attendance_date >= %s)
+              AND (%s IS NULL OR a.attendance_date <= %s)
         """
-        cursor.execute(query, (employee_id, employee_id, action_type, action_type))
+        cursor.execute(
+            query,
+            (
+                employee_id, employee_id,
+                clean_code, clean_code,
+                clean_action, clean_action,
+                start_date, start_date,
+                end_date, end_date,
+            ),
+        )
         (count,) = cursor.fetchone()
         return count
     finally:

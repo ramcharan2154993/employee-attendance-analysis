@@ -223,30 +223,6 @@ def toggle_user_status(conn: MySQLConnectionAbstract, user_id: int) -> bool:
         cursor.close()
 
 
-def provision_initial_admin(
-    conn: MySQLConnectionAbstract,
-    username: str = "admin",
-    password: str | None = None,
-) -> tuple[str, str]:
-    """Provision initial admin user if no admin exists. Returns (username, password)."""
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT user_id, username FROM users WHERE role = 'Admin' LIMIT 1")
-        existing_admin = cursor.fetchone()
-        if existing_admin:
-            return (existing_admin["username"], "")
-
-        # Determine password
-        pwd = password
-        if not pwd:
-            pwd = os.getenv("ADMIN_INITIAL_PASSWORD")
-        if not pwd:
-            pwd = secrets.token_urlsafe(12)
-
-        create_user(conn, username=username, password=pwd, role="Admin")
-        return (username, pwd)
-    finally:
-        cursor.close()
 
 
 if __name__ == "__main__":

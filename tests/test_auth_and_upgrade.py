@@ -22,7 +22,6 @@ from src.auth import (
     create_user,
     get_user_by_username,
     list_users,
-    provision_initial_admin,
     toggle_user_status,
 )
 from src.db import migrate_auth_and_audit
@@ -397,16 +396,17 @@ def test_cannot_deactivate_sole_admin(conn: Any) -> None:
         toggle_user_status(conn, admin_id)
 
 
-def test_initial_admin_provisioning_idempotency(conn: Any) -> None:
-    """Provisioning initial admin generates user once; subsequent calls return existing."""
-    user, pwd = provision_initial_admin(conn, username="sysadmin", password="InitialPass123!")
-    assert user == "sysadmin"
-    assert pwd == "InitialPass123!"
+def test_admin_creation_and_duplicate_rejection(conn: Any) -> None:
+    """Creating an admin user succeeds, while duplicate username raises ValueError."""
+    admin_id = create_user(conn, username="sysadmin", password="InitialPass123!", role="Admin")
+    assert admin_id > 0
+    admin = get_user_by_username(conn, "sysadmin")
+    assert admin is not None
+    assert admin["role"] == "Admin"
 
-    # Second call returns existing admin without modifying
-    user2, pwd2 = provision_initial_admin(conn, username="sysadmin")
-    assert user2 == "sysadmin"
-    assert pwd2 == ""
+    # Creating another user with same username raises duplicate error
+    with pytest.raises(ValueError, match="already exists"):
+        create_user(conn, username="sysadmin", password="DifferentPass456!", role="Admin")
 
 
 def test_unauthenticated_requests_redirect_or_reject(auth_client: Any) -> None:
@@ -537,4 +537,43 @@ def test_dashboard_dynamic_refresh_and_cache_control(auth_client: Any, conn: Any
     r3 = auth_client.get("/?year=2026&month=9")
     assert r3.status_code == 200
     assert "50.0%" in r3.data.decode("utf-8")
+
+
+def test_audit_view_route(auth_client: Any, conn: Any) -> None:
+    """GET /audit renders audit records with filtering and empty state."""
+    uid = create_user(conn, "audit_viewer", "pass12345", role="Admin")
+    add_employee(conn, "EMP95", "Diana Prince", "Security", joining_date="2026-09-01")
+    att_id = record_attendance(conn, "EMP95", datetime.date(2026, 9, 1), "Absent", user_id=uid)
+    update_attendance(
+        conn,
+        "EMP95",
+        datetime.date(2026, 9, 1),
+        "Present",
+        reason="Approved remote shift",
+        user_id=uid,
+    )
+
+    with auth_client.session_transaction() as sess:
+        sess["user_id"] = uid
+        sess["username"] = "audit_viewer"
+        sess["role"] = "Admin"
+
+    # Default /audit
+    resp = auth_client.get("/audit")
+    assert resp.status_code == 200
+    html = resp.data.decode("utf-8")
+    assert "Audit Trail" in html
+    assert "EMP95" in html
+    assert "Approved remote shift" in html
+    assert "CORRECT" in html
+
+    # Filter by action=CORRECT
+    resp_correct = auth_client.get("/audit?action=CORRECT")
+    assert resp_correct.status_code == 200
+    assert "Approved remote shift" in resp_correct.data.decode("utf-8")
+
+    # Filter with non-existent employee
+    resp_none = auth_client.get("/audit?employee=NONEXISTENT")
+    assert resp_none.status_code == 200
+    assert "No audit records found" in resp_none.data.decode("utf-8")
 

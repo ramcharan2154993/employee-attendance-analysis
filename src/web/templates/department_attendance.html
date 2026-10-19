@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Department Attendance - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="actions-bar">
+    <a href="/attendance" class="btn btn-secondary btn-sm">&larr; Back to Attendance Log</a>
+    <a href="/attendance/new" class="btn btn-secondary btn-sm">Record Single Attendance</a>
+    <a href="/holidays/new" class="btn btn-secondary btn-sm">Record Holiday</a>
+</div>
+
+<div class="card">
+    <h1>Department Bulk Attendance</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Record daily attendance atomically for all eligible active employees in a department.
+    </p>
+
+    <form action="/attendance/department" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="flex: 1; min-width: 220px;">
+            <label for="department" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Select Department:</label>
+            <select id="department" name="department" required style="width: 100%;">
+                <option value="">-- Choose Department --</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if dept == selected_department %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 180px;">
+            <label for="attendance_date" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Attendance Date:</label>
+            <input type="date" id="attendance_date" name="attendance_date" value="{{ attendance_date }}" required style="width: 100%;">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Load Roster</button>
+        </div>
+    </form>
+</div>
+
+{% if error %}
+<div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+    {{ error }}
+</div>
+{% endif %}
+
+{% if conflicts %}
+<div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+    <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.5rem;">
+        ⚠️ Duplicate Attendance Detected — Submission Blocked
+    </strong>
+    <p style="margin: 0.25rem 0;">
+        Attendance has already been recorded on <strong>{{ attendance_date }}</strong> for {{ conflicts|length }} employee(s) in {{ selected_department }}:
+    </p>
+    <ul style="margin: 0.5rem 0 0.75rem 1.25rem; padding: 0;">
+        {% for c in conflicts %}
+        <li><strong>{{ c.employee_code }}</strong> &mdash; {{ c.employee_name }}</li>
+        {% endfor %}
+    </ul>
+    <p style="margin: 0.25rem 0 0.75rem 0; font-size: 0.9rem; color: #ffe4e6;">
+        To prevent partial or inconsistent data, atomic batch submission will be rejected. You can view recorded entries or perform individual corrections:
+    </p>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
+        <a href="/attendance?department={{ selected_department }}&start={{ attendance_date }}&end={{ attendance_date }}" class="btn btn-secondary btn-sm">
+            View Recorded Attendance
+        </a>
+        <a href="/attendance/correct?attendance_date={{ attendance_date }}" class="btn btn-secondary btn-sm">
+            Correct Individual Attendance
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% if selected_department and eligible_employees %}
+<form action="/attendance/department" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="department" value="{{ selected_department }}">
+    <input type="hidden" name="attendance_date" value="{{ attendance_date }}">
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-title">Department</div>
+            <div class="stat-value" style="font-size: 1.4rem;">{{ selected_department }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Attendance Date</div>
+            <div class="stat-value" style="font-size: 1.4rem;">{{ attendance_date }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Eligible Active Staff</div>
+            <div class="stat-value" style="color: var(--primary);">{{ eligible_employees|length }}</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <h2 style="margin: 0; font-size: 1.25rem;">Department Attendance Roster</h2>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">All eligible employees default to Present. Adjust individual statuses as needed.</span>
+            </div>
+            <div>
+                <button type="reset" class="btn btn-secondary btn-sm" title="Reset all statuses to Present">
+                    Mark All Present
+                </button>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 48px;">#</th>
+                        <th style="width: 130px;">Code</th>
+                        <th>Employee Name</th>
+                        <th style="width: 140px;">Joining Date</th>
+                        <th style="width: 280px; text-align: center;">Status Selection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in eligible_employees %}
+                    {% set current_status = submitted_statuses.get(emp.employee_code, 'Present') if submitted_statuses else 'Present' %}
+                    <tr>
+                        <td style="color: var(--text-dim);">{{ loop.index }}</td>
+                        <td>
+                            <input type="hidden" name="employee_codes" value="{{ emp.employee_code }}">
+                            <strong style="color: var(--primary);">{{ emp.employee_code }}</strong>
+                        </td>
+                        <td>{{ emp.employee_name }}</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">{{ emp.joining_date }}</td>
+                        <td style="text-align: center;">
+                            <div class="status-group">
+                                <label class="status-option status-present">
+                                    <input type="radio" name="status_{{ emp.employee_code }}" value="Present" {% if current_status == 'Present' %}checked{% endif %} required>
+                                    <span>Present</span>
+                                </label>
+                                <label class="status-option status-absent">
+                                    <input type="radio" name="status_{{ emp.employee_code }}" value="Absent" {% if current_status == 'Absent' %}checked{% endif %}>
+                                    <span>Absent</span>
+                                </label>
+                                <label class="status-option status-leave">
+                                    <input type="radio" name="status_{{ emp.employee_code }}" value="Leave" {% if current_status == 'Leave' %}checked{% endif %}>
+                                    <span>Leave</span>
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-top: 1.5rem;">
+            <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem; color: var(--warning);">
+                Confirmation &amp; Review
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                Please verify all status selections before saving. Department attendance records are saved atomically in a single database transaction. If any employee already has attendance recorded on this date, the entire batch will be refused.
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+                <input type="checkbox" id="confirm_review" name="confirm_review" required style="cursor: pointer; width: 1.1rem; height: 1.1rem;">
+                <label for="confirm_review" style="font-weight: 500; font-size: 0.95rem; cursor: pointer;">
+                    I have reviewed the roster for {{ selected_department }} and confirm this attendance submission.
+                </label>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button type="submit" class="btn btn-primary" {% if conflicts %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
+                    Submit Department Attendance
+                </button>
+                <a href="/attendance" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% elif selected_department and not eligible_employees and not error and not conflicts %}
+<div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+    <h2 style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 0.5rem;">No Eligible Employees Found</h2>
+    <p style="color: var(--text-dim); margin-bottom: 1rem;">
+        There are no active employees in <strong>{{ selected_department }}</strong> whose joining date is on or before <strong>{{ attendance_date }}</strong>.
+    </p>
+    <a href="/employees/new" class="btn btn-secondary btn-sm">+ Add Employee to {{ selected_department }}</a>
+</div>
+{% endif %}
+{% endblock %}

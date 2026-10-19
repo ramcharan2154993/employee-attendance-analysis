@@ -3,32 +3,53 @@
 {% block title %}{{ title }} - Employee Attendance Analysis System{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>{{ title }}</h1>
+<div class="actions-bar">
+    <a href="/employees" class="btn btn-secondary btn-sm">&larr; Back to Employees</a>
+</div>
+
+<div class="card" style="max-width: 520px; margin: 0 auto;">
+    <h1 style="font-size: 1.4rem; margin-bottom: 1.25rem;">{{ title }}</h1>
     {% if error %}
-    <p style="color: var(--danger); font-weight: 500;">{{ error }}</p>
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
     {% endif %}
-    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1rem; max-width: 480px;">
+    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1.15rem;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div>
-            <label for="employee_code" style="display: block; margin-bottom: 0.25rem;">Employee Code:</label>
+            <label for="employee_code" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Employee Code:</label>
             {% if is_edit %}
-            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" readonly style="width: 100%; opacity: 0.7;">
+            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" readonly style="width: 100%; opacity: 0.7; cursor: not-allowed;">
             {% else %}
-            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" required style="width: 100%;">
+            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" placeholder="e.g. E001" required style="width: 100%;">
             {% endif %}
         </div>
         <div>
-            <label for="employee_name" style="display: block; margin-bottom: 0.25rem;">Employee Name:</label>
-            <input type="text" id="employee_name" name="employee_name" value="{{ name }}" style="width: 100%;">
+            <label for="employee_name" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Employee Name:</label>
+            <input type="text" id="employee_name" name="employee_name" value="{{ name }}" placeholder="Full Name" required style="width: 100%;">
         </div>
         <div>
-            <label for="department" style="display: block; margin-bottom: 0.25rem;">Department:</label>
-            <input type="text" id="department" name="department" value="{{ department }}" style="width: 100%;">
+            <label for="department" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Department:</label>
+            <input type="text" id="department" name="department" list="department_options" value="{{ department }}" placeholder="e.g. Engineering" required style="width: 100%;">
+            <datalist id="department_options">
+                <option value="Engineering">
+                <option value="Marketing">
+                <option value="HR">
+                <option value="Finance">
+                <option value="Operations">
+                <option value="Sales">
+            </datalist>
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
-            <button type="submit">Save</button>
-            <a href="/employees" style="color: var(--text-muted); text-decoration: none;">Cancel</a>
+        <div>
+            <label for="joining_date" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Joining Date:</label>
+            <input type="date" id="joining_date" name="joining_date" value="{{ joining_date }}" style="width: 100%;">
+            <small style="color: var(--text-dim); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                Leave blank to default to today's date.
+            </small>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem;">
+            <button type="submit" class="btn btn-primary">Save Employee</button>
+            <a href="/employees" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

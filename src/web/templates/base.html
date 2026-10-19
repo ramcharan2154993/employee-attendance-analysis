@@ -4,152 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Employee Attendance Analysis System{% endblock %}</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --border: #334155;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #38bdf8;
-            --primary-hover: #0284c7;
-            --accent: #22c55e;
-            --danger: #ef4444;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
-        }
-        header {
-            background-color: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-        }
-        nav {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        nav a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.15s ease;
-        }
-        nav a:hover {
-            color: var(--primary);
-        }
-        main {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1, h2, h3 {
-            color: var(--text);
-            margin-top: 0;
-        }
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-        th, td {
-            text-align: left;
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-        th {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--primary);
-        }
-        input, button, select {
-            background: #0f172a;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.5rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.95rem;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        button {
-            background: var(--primary);
-            color: #0f172a;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        button:hover {
-            background: var(--primary-hover);
-        }
-        pre {
-            background: #090d16;
-            border: 1px solid var(--border);
-            padding: 1.25rem;
-            border-radius: 6px;
-            overflow-x: auto;
-            color: #38bdf8;
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 0.95rem;
-        }
-        .badge-active {
-            color: var(--accent);
-            font-weight: 600;
-        }
-        .badge-inactive {
-            color: var(--danger);
-            font-weight: 600;
-        }
-        .chart-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            margin-bottom: 1.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <strong style="color: var(--primary); font-size: 1.1rem; margin-right: 1rem;">Attendance System</strong>
-            <a href="/">Dashboard</a>
-            <a href="/employees">Employees</a>
-            <a href="/employees/new">Add employee</a>
-            <a href="/attendance">Attendance</a>
-            <a href="/attendance/new">Record attendance</a>
-            <a href="/attendance/correct">Correct attendance</a>
-            <a href="/holidays/new">Record holiday</a>
-            <a href="/summary/employees">Employee Summary</a>
-            <a href="/summary/departments">Department Summary</a>
-            <a href="/ranking">Absenteeism Ranking</a>
-        </nav>
-    </header>
-    <main>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="card" style="border-color: var(--primary); margin-bottom: 1rem;">
-                    {% for message in messages %}
-                        <p style="margin: 0.25rem 0;">{{ message }}</p>
-                    {% endfor %}
+    <input type="checkbox" id="sidebar-toggle" class="mobile-toggle-input">
+    <div class="app-layout">
+        <!-- Left Sidebar (Fixed) -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo-icon">W</div>
+                <div class="sidebar-brand-name">WorkforceHQ</div>
+                <label for="sidebar-toggle" class="mobile-toggle-btn" aria-label="Toggle navigation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </label>
+            </div>
+
+            <div class="sidebar-org-chip">
+                <div class="org-chip-avatar">HR</div>
+                <div class="org-chip-details">
+                    <div class="org-chip-title">Human Resources</div>
+                    <div class="org-chip-subtitle">Employee Attendance Analysis System</div>
                 </div>
-            {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </main>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-item-wrapper {% if request.path == '/' %}active{% endif %}">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a>
+                </div>
+
+                <div class="nav-item-wrapper {% if request.path.startswith('/employees') %}active{% endif %}">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <a href="/employees" class="{% if request.path.startswith('/employees') %}active{% endif %}">Employees</a>
+                </div>
+
+                <div class="nav-item-wrapper {% if request.path.startswith('/attendance') or request.path.startswith('/holidays') %}active{% endif %}">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <a href="/attendance" class="{% if request.path.startswith('/attendance') or request.path.startswith('/holidays') %}active{% endif %}">Attendance</a>
+                </div>
+
+                <div class="nav-item-wrapper {% if request.path.startswith('/summary') or request.path.startswith('/ranking') or request.path.startswith('/report') or request.path.startswith('/charts') %}active{% endif %}">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <a href="/summary/employees" class="{% if request.path.startswith('/summary') or request.path.startswith('/ranking') or request.path.startswith('/report') or request.path.startswith('/charts') %}active{% endif %}">Reports &amp; Analytics</a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span>Enterprise v2.0</span>
+                <span class="badge badge-present" style="font-size: 0.72rem; padding: 2px 8px;">Active</span>
+            </div>
+        </aside>
+
+        <!-- Main Body -->
+        <div class="app-main">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <label for="sidebar-toggle" class="mobile-toggle-btn" aria-label="Toggle navigation">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </label>
+
+                    <div class="section-tabs">
+                        {% if request.path.startswith('/summary') or request.path.startswith('/ranking') or request.path.startswith('/report') or request.path.startswith('/charts') %}
+                            <a href="/summary/employees" class="tab-link {% if request.path == '/summary/employees' %}active{% endif %}">Employee Summary</a>
+                            <a href="/summary/departments" class="tab-link {% if request.path == '/summary/departments' %}active{% endif %}">Department Summary</a>
+                            <a href="/ranking" class="tab-link {% if request.path == '/ranking' %}active{% endif %}">Absenteeism Ranking</a>
+                            <a href="/report" class="tab-link {% if request.path.startswith('/report') %}active{% endif %}">Monthly Report</a>
+                            <a href="/charts" class="tab-link {% if request.path.startswith('/charts') %}active{% endif %}">Charts</a>
+                        {% elif request.path.startswith('/attendance') or request.path.startswith('/holidays') %}
+                            <a href="/attendance" class="tab-link {% if request.path == '/attendance' %}active{% endif %}">Attendance Log</a>
+                            <a href="/attendance/department" class="tab-link {% if request.path == '/attendance/department' %}active{% endif %}">Department Bulk</a>
+                            <a href="/attendance/new" class="tab-link {% if request.path == '/attendance/new' %}active{% endif %}">Single Record</a>
+                            <a href="/holidays/new" class="tab-link {% if request.path == '/holidays/new' %}active{% endif %}">Record Holiday</a>
+                        {% elif request.path.startswith('/employees') %}
+                            <a href="/employees" class="tab-link {% if request.path == '/employees' %}active{% endif %}">Directory</a>
+                            <a href="/employees/new" class="tab-link {% if request.path == '/employees/new' %}active{% endif %}">+ Add Employee</a>
+                        {% else %}
+                            <a href="/" class="tab-link active">Analytics</a>
+                            <a href="/employees" class="tab-link">Directory</a>
+                            <a href="/attendance/department" class="tab-link">Bulk Recording</a>
+                            <a href="/charts" class="tab-link">Visualizations</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="top-bar-right">
+                    <form action="/employees" method="GET" class="search-box">
+                        <svg class="search-box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" name="q" placeholder="Search employees..." value="{{ request.args.get('q', '') }}" aria-label="Search employees">
+                    </form>
+                    <div class="user-avatar-chip" title="HR Administrator">HR</div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="content-wrapper">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-success">
+                            {% for message in messages %}
+                                <p style="margin: 0.25rem 0; font-weight: 500;">{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
 </body>
 </html>

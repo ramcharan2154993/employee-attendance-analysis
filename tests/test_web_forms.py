@@ -563,7 +563,219 @@ def test_security_headers_on_responses(client: Any, conn: Any) -> None:
     assert "Content-Security-Policy" in res_302.headers
 
 
+def test_department_attendance_page_get(client: Any, conn: Any) -> None:
+    """GET /attendance/department renders department selection and loads eligible roster."""
+    add_employee(conn, "E060", "Roster One", "Engineering", joining_date="2026-09-01")
+    add_employee(conn, "E061", "Roster Two", "Engineering", joining_date="2026-09-01")
+
+    # Initial page without department
+    res = client.get("/attendance/department")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "Department Bulk Attendance" in html
+    assert "Engineering" in html
+
+    # With department and valid date
+    res_roster = client.get(
+        "/attendance/department?department=Engineering&attendance_date=2026-09-08"
+    )
+    assert res_roster.status_code == 200
+    html_roster = res_roster.get_data(as_text=True)
+    assert "E060" in html_roster
+    assert "E061" in html_roster
+    assert "Department Attendance Roster" in html_roster
+    assert "Mark All Present" in html_roster
+
+
+def test_department_attendance_get_duplicate_warning(client: Any, conn: Any) -> None:
+    """GET /attendance/department shows duplicate conflict alert if attendance already exists."""
+    add_employee(conn, "E062", "Existing Emp", "Support", joining_date="2026-09-01")
+    record_attendance(conn, "E062", datetime.date(2026, 9, 8), "Present")
+
+    res = client.get(
+        "/attendance/department?department=Support&attendance_date=2026-09-08"
+    )
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "Duplicate Attendance Detected" in html
+    assert "E062" in html
+    assert "Existing Emp" in html
+    assert "/attendance/correct" in html
+
+
+def test_department_attendance_post_csrf(client: Any, conn: Any) -> None:
+    """POST /attendance/department requires valid CSRF token."""
+    add_employee(conn, "E063", "Csrf Tester", "Legal", joining_date="2026-09-01")
+
+    # Missing token returns 400
+    res_no_token = client.post(
+        "/attendance/department",
+        data={
+            "department": "Legal",
+            "attendance_date": "2026-09-08",
+            "employee_codes": ["E063"],
+            "status_E063": "Present",
+        },
+    )
+    assert res_no_token.status_code == 400
+    assert "Error: invalid or missing form token." in res_no_token.get_data(as_text=True)
+
+
+def test_department_attendance_post_success(client: Any, conn: Any) -> None:
+    """POST /attendance/department saves entire batch atomically and redirects."""
+    add_employee(conn, "E064", "Batch One", "Operations", joining_date="2026-09-01")
+    add_employee(conn, "E065", "Batch Two", "Operations", joining_date="2026-09-01")
+
+    token = get_csrf_token(
+        client,
+        "/attendance/department?department=Operations&attendance_date=2026-09-08",
+    )
+    res = client.post(
+        "/attendance/department",
+        data={
+            "csrf_token": token,
+            "department": "Operations",
+            "attendance_date": "2026-09-08",
+            "employee_codes": ["E064", "E065"],
+            "status_E064": "Present",
+            "status_E065": "Leave",
+            "confirm_review": "on",
+        },
+    )
+    assert res.status_code == 302
+    assert "/attendance" in res.headers.get("Location", "")
+
+    # Check database records
+    e064_rows = get_attendance(conn, employee_code="E064")
+    assert len(e064_rows) == 1
+    assert e064_rows[0]["status"] == "Present"
+
+    e065_rows = get_attendance(conn, employee_code="E065")
+    assert len(e065_rows) == 1
+    assert e065_rows[0]["status"] == "Leave"
+
+
+def test_department_attendance_post_conflict_rejection_and_rollback(
+    client: Any, conn: Any
+) -> None:
+    """POST /attendance/department rejects entire batch when any conflict exists."""
+    add_employee(conn, "E066", "QA One", "QA", joining_date="2026-09-01")
+    add_employee(conn, "E067", "QA Two", "QA", joining_date="2026-09-01")
+    att_date = datetime.date(2026, 9, 8)
+
+    # Record attendance for E066 beforehand
+    record_attendance(conn, "E066", att_date, "Present")
+
+    token = get_csrf_token(
+        client, f"/attendance/department?department=QA&attendance_date={att_date}"
+    )
+    res = client.post(
+        "/attendance/department",
+        data={
+            "csrf_token": token,
+            "department": "QA",
+            "attendance_date": str(att_date),
+            "employee_codes": ["E066", "E067"],
+            "status_E066": "Present",
+            "status_E067": "Present",
+            "confirm_review": "on",
+        },
+    )
+    assert res.status_code == 400
+    html = res.get_data(as_text=True)
+    assert "Attendance already recorded for 1 employee(s)" in html
+    assert "E066" in html
+
+    # Verify atomic rollback: E067 has no row saved
+    assert len(get_attendance(conn, employee_code="E067")) == 0
+
+
+def test_department_attendance_post_weekend_and_invalid_date(
+    client: Any, conn: Any
+) -> None:
+    """POST /attendance/department rejects weekend dates and malformed date strings."""
+    add_employee(conn, "E068", "Weekend Tester", "HR", joining_date="2026-09-01")
+
+    token = get_csrf_token(client, "/attendance/department")
+    res_weekend = client.post(
+        "/attendance/department",
+        data={
+            "csrf_token": token,
+            "department": "HR",
+            "attendance_date": "2026-09-05",  # Saturday
+            "employee_codes": ["E068"],
+            "status_E068": "Present",
+        },
+    )
+    assert res_weekend.status_code == 400
+    assert "cannot be recorded on weekends" in res_weekend.get_data(as_text=True)
+
+    token = get_csrf_token(client, "/attendance/department")
+    res_bad_date = client.post(
+        "/attendance/department",
+        data={
+            "csrf_token": token,
+            "department": "HR",
+            "attendance_date": "2026-13-45",
+            "employee_codes": ["E068"],
+            "status_E068": "Present",
+        },
+    )
+    assert res_bad_date.status_code == 400
+    assert "Invalid date" in res_bad_date.get_data(as_text=True)
+
+
+def test_attendance_log_enhancements(client: Any, conn: Any) -> None:
+    """Attendance log displays employee names, department filter, and correction links."""
+    add_employee(conn, "E070", "John Doe", "Sales", joining_date="2026-09-01")
+    add_employee(conn, "E071", "Jane Smith", "Finance", joining_date="2026-09-01")
+    att_date = datetime.date(2026, 9, 8)
+
+    record_attendance(conn, "E070", att_date, "Present")
+    record_attendance(conn, "E071", att_date, "Present")
+
+    # Default attendance log view
+    res = client.get("/attendance")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "John Doe" in html
+    assert "Jane Smith" in html
+    assert "/attendance/department" in html
+    assert "employee_code=E070" in html
+    assert "Correct" in html
+
+    # Filter by department
+    res_dept = client.get("/attendance?department=Sales")
+    assert res_dept.status_code == 200
+    html_dept = res_dept.get_data(as_text=True)
+    assert "E070" in html_dept
+    assert "John Doe" in html_dept
+    assert "E071" not in html_dept
+
+
+def test_attendance_form_datalist_and_prepopulation(client: Any, conn: Any) -> None:
+    """Attendance form provides searchable datalist and pre-populates query arguments."""
+    add_employee(conn, "E072", "Mark Taylor", "HR", joining_date="2026-09-01")
+
+    # /attendance/new includes datalist with active employee
+    res_new = client.get("/attendance/new")
+    assert res_new.status_code == 200
+    html_new = res_new.get_data(as_text=True)
+    assert 'list="employee_options"' in html_new
+    assert "E072" in html_new
+
+    # /attendance/correct pre-populates employee_code and attendance_date
+    res_correct = client.get(
+        "/attendance/correct?employee_code=E072&attendance_date=2026-09-08"
+    )
+    assert res_correct.status_code == 200
+    html_correct = res_correct.get_data(as_text=True)
+    assert 'value="E072"' in html_correct
+    assert 'value="2026-09-08"' in html_correct
+
+
 def test_session_cookie_flags(client: Any) -> None:
+
     """Session cookie after GET of form page includes HttpOnly and SameSite=Lax."""
     res = client.get("/employees/new")
     assert res.status_code == 200
@@ -599,3 +811,58 @@ def test_web_source_security_and_architectural_rules() -> None:
 
     init_content = (web_dir / "__init__.py").read_text(encoding="utf-8")
     assert "compare_digest" in init_content
+
+
+def test_active_nav_indicators(client: Any) -> None:
+    """Verify that active navigation indicators highlight the appropriate hub."""
+    res_dash = client.get("/")
+    assert res_dash.status_code == 200
+    assert 'href="/" class="active">Dashboard</a>' in res_dash.get_data(as_text=True)
+
+    res_emp = client.get("/employees")
+    assert res_emp.status_code == 200
+    assert 'href="/employees" class="active">Employees</a>' in res_emp.get_data(as_text=True)
+
+    res_att = client.get("/attendance")
+    assert res_att.status_code == 200
+    assert 'href="/attendance" class="active">Attendance</a>' in res_att.get_data(as_text=True)
+
+    res_rep = client.get("/summary/employees")
+    assert res_rep.status_code == 200
+    assert 'href="/summary/employees" class="active">Reports &amp; Analytics</a>' in res_rep.get_data(as_text=True)
+
+
+def test_searchable_selectors_rich_options(client: Any, conn: Any) -> None:
+    """Verify searchable selector presents code, name, department and selected staff card."""
+    add_employee(conn, "E099", "Nina Patel", "Marketing", joining_date="2026-09-01")
+
+    res_new = client.get("/attendance/new")
+    assert res_new.status_code == 200
+    html_new = res_new.get_data(as_text=True)
+    assert 'list="employee_options"' in html_new
+    assert "E099" in html_new
+    assert "Nina Patel" in html_new
+    assert "Marketing" in html_new
+
+    res_correct = client.get("/attendance/correct?employee_code=E099&attendance_date=2026-09-08")
+    assert res_correct.status_code == 200
+    html_correct = res_correct.get_data(as_text=True)
+    assert "Selected:" in html_correct
+    assert "Nina Patel" in html_correct
+    assert "Marketing" in html_correct
+
+
+def test_report_subnav_and_defaults(client: Any) -> None:
+    """Verify default query parameters on reports/charts and subnav active state."""
+    res_rep = client.get("/report")
+    assert res_rep.status_code == 200
+    html_rep = res_rep.get_data(as_text=True)
+    assert "2026-09" in html_rep
+    assert 'href="/report?year=2026&month=9" class="btn btn-primary' in html_rep
+
+    res_charts = client.get("/charts")
+    assert res_charts.status_code == 200
+    html_charts = res_charts.get_data(as_text=True)
+    assert "2026-09" in html_charts
+    assert 'href="/charts?year=2026&month=9" class="btn btn-primary' in html_charts
+

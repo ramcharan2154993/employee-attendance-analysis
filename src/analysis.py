@@ -11,6 +11,7 @@ ATTENDANCE_DF_COLS = [
     "employee_name",
     "department",
     "is_active",
+    "joining_date",
     "attendance_date",
     "status",
 ]
@@ -77,15 +78,20 @@ def load_attendance_df(
                 e.employee_name,
                 e.department,
                 e.is_active,
+                e.joining_date,
                 a.attendance_date,
                 a.status
             FROM employees e
             LEFT JOIN attendance a ON e.employee_id = a.employee_id
                 AND (%s IS NULL OR a.attendance_date >= %s)
                 AND (%s IS NULL OR a.attendance_date <= %s)
+            WHERE (%s IS NULL OR e.joining_date <= %s)
             ORDER BY e.employee_code, a.attendance_date
         """
-        cursor.execute(query, (start_date, start_date, end_date, end_date))
+        cursor.execute(
+            query,
+            (start_date, start_date, end_date, end_date, end_date, end_date),
+        )
         rows = cursor.fetchall()
         if not rows:
             return pd.DataFrame(columns=ATTENDANCE_DF_COLS)
@@ -239,3 +245,75 @@ def absenteeism_ranking(employee_summary_df: pd.DataFrame) -> pd.DataFrame:
         na_position="last",
     ).reset_index(drop=True)
     return res
+
+
+def get_dashboard_summary(
+    conn: MySQLConnectionAbstract,
+    year: int | None = None,
+    month: int | None = None,
+) -> dict[str, Any]:
+    """Calculate organization-wide KPI metrics for the given or latest month."""
+    if year is None or month is None:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT MAX(attendance_date) FROM attendance")
+            row = cursor.fetchone()
+            if row and row[0]:
+                max_date = row[0]
+                if isinstance(max_date, str):
+                    max_date = datetime.date.fromisoformat(max_date)
+                year = max_date.year
+                month = max_date.month
+            else:
+                year = 2026
+                month = 9
+        finally:
+            cursor.close()
+
+    import calendar
+    _, last_day = calendar.monthrange(year, month)
+    start_date = datetime.date(year, month, 1)
+    end_date = datetime.date(year, month, last_day)
+
+    df = load_attendance_df(conn, start_date=start_date, end_date=end_date)
+    if df.empty:
+        return {
+            "year": year,
+            "month": month,
+            "month_name": start_date.strftime("%B %Y"),
+            "present": 0,
+            "absent": 0,
+            "leave": 0,
+            "holiday": 0,
+            "eligible_days": 0,
+            "attendance_pct": None,
+            "absenteeism_pct": None,
+        }
+
+    present = int((df["status"] == "Present").sum())
+    absent = int((df["status"] == "Absent").sum())
+    leave = int((df["status"] == "Leave").sum())
+    holiday = int((df["status"] == "Holiday").sum())
+    eligible = present + absent + leave
+
+    from src.calculations import (
+        calculate_absenteeism_percentage,
+        calculate_attendance_percentage,
+    )
+
+    att_pct = calculate_attendance_percentage(present, absent, leave)
+    abs_pct = calculate_absenteeism_percentage(present, absent, leave)
+
+    return {
+        "year": year,
+        "month": month,
+        "month_name": start_date.strftime("%B %Y"),
+        "present": present,
+        "absent": absent,
+        "leave": leave,
+        "holiday": holiday,
+        "eligible_days": eligible,
+        "attendance_pct": att_pct,
+        "absenteeism_pct": abs_pct,
+    }
+

@@ -1,9 +1,9 @@
 # PROGRESS.md: Employee Attendance Analysis System
 
-Last updated: 2026-10-17
+Last updated: 2026-10-19
 
 ## Current status (one line)
-All core modules, CLI menu, and Flask web application are fully implemented with 90 automated tests passing.
+Phase 1, Phase 2, and Phase 3 (Final UI/UX Redesign, Searchable Selectors, and Navigation Enhancements) completed and verified with 127 automated tests passing.
 
 ## Phases
 | Phase | Status | Evidence (real command and result) |
@@ -18,7 +18,10 @@ All core modules, CLI menu, and Flask web application are fully implemented with
 | 8. Menu (main.py) | Tested and passed | Commit 875b518; pytest tests/test_main.py (17 passed in 1.92s) |
 | W1. Flask read-only pages | Tested and passed | Commit d16c399; pytest tests/test_web.py (13 passed in 6.32s) |
 | W2. Flask forms | Tested and passed | Commit 05c0998; pytest tests/test_web_forms.py (14 passed in 5.61s) |
-| 9. README and final review | Implemented but not verified | Documentation written; full pytest run: 90 passed in 10.21s |
+| 9. Phase 1 - Migration & Rules | Tested and passed | pytest: 105 passed in 12.25s (joining dates, department helpers, migration recovery) |
+| 10. Phase 2 - Bulk Attendance & UI/UX | Tested and passed | pytest: 124 passed in 11.73s (department batch attendance, atomic rollback, conflict checks, UI redesign, CLI menu) |
+| 11. Phase 3 - Final UI/UX & Searchable Selectors | Tested and passed | pytest: 127 passed in 13.45s (active navigation indicators, searchable employee selectors, reports subnav & defaults, responsive containers) |
+
 
 Status words: Not started / In progress / Implemented but not verified / Tested and passed / Blocked.
 Only write "Tested and passed" when a real test run proves it, and paste the result line.
@@ -47,10 +50,12 @@ Only write "Tested and passed" when a real test run proves it, and paste the res
 ## Decisions made (by the project owner)
 - D1 to D5 approved: holiday rows per employee, leave counts in the denominator, department % by total days, deactivate not delete, command-line menu. Details are in PROJECT_CONTEXT.md.
 - D6 (changes D5): a Flask web interface is added after the menu; the command-line menu stays. Safety rules are in PROJECT_CONTEXT.md.
+- D7: a login for head users is added (full access, no public pages), and the site may be hosted publicly with fake data. Power BI was considered and is not needed.
 
 ## Problems we hit and how we fixed them
 - ENUM strict mode: see final check result: SELECT @@sql_mode returned ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION (STRICT_TRANS_TABLES is active; invalid ENUM values are strictly rejected by MySQL).
 - MySQL transaction isolation during web testing: In test_web_forms.py, MySQL's default REPEATABLE READ isolation kept previous SELECT snapshots active in the fixture connection; resolved by enabling autocommit on the verification connection.
+- Production schema migration synchronization: The test database was migrated during Phase 1 testing, but `attendance_db` still lacked `joining_date`, causing 1054 Unknown column errors on startup; resolved cleanly by executing `migrate_schema(conn)` on `attendance_db`, backfilling earliest attendance dates (2026-09-01 / 2026-09-14) without data loss or record resets.
 
 ## Next step (exactly one)
 Project owner reads README.md and docs/rules.md, then pushes to GitHub.

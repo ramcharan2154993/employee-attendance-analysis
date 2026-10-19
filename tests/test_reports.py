@@ -10,7 +10,7 @@ from src.analysis import (
     employee_summary,
     monthly_summary,
 )
-from src.attendance import get_attendance, record_attendance
+from src.attendance import get_attendance, record_attendance, record_holiday
 from src.employees import add_employee
 from src.reports import (
     export_charts,
@@ -234,7 +234,7 @@ def test_db_reconciliation(conn):
     record_attendance(conn, "E001", datetime.date(2026, 9, 2), "Absent")
     record_attendance(conn, "E001", datetime.date(2026, 9, 3), "Leave")
     record_attendance(conn, "E001", datetime.date(2026, 9, 4), "Present")
-    record_attendance(conn, "E001", datetime.date(2026, 9, 14), "Holiday")
+    record_holiday(conn, datetime.date(2026, 9, 14))
 
     att_rows = get_attendance(
         conn,

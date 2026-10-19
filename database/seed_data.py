@@ -12,12 +12,12 @@ if str(project_root) not in sys.path:
 from src.db import get_connection
 
 EMPLOYEES_DATA = [
-    ("E001", "Asha Rao", "Engineering", True),
-    ("E002", "Ravi Kumar", "Engineering", True),
-    ("E003", "Meera Nair", "Sales", True),
-    ("E004", "Karan Shah", "Sales", True),
-    ("E005", "Divya Menon", "HR", True),
-    ("E006", "Sample Newjoiner", "HR", True),
+    ("E001", "Asha Rao", "Engineering", True, datetime.date(2026, 1, 15)),
+    ("E002", "Ravi Kumar", "Engineering", True, datetime.date(2026, 2, 1)),
+    ("E003", "Meera Nair", "Sales", True, datetime.date(2026, 3, 10)),
+    ("E004", "Karan Shah", "Sales", True, datetime.date(2026, 4, 1)),
+    ("E005", "Divya Menon", "HR", True, datetime.date(2026, 5, 1)),
+    ("E006", "Sample Newjoiner", "HR", True, datetime.date(2026, 9, 1)),
 ]
 
 ATTENDANCE_COUNTS = {
@@ -82,8 +82,8 @@ def seed_database(database_name: str | None = None) -> None:
 
         # Insert employees using parameterized SQL
         insert_emp_query = """
-            INSERT INTO employees (employee_code, employee_name, department, is_active)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO employees (employee_code, employee_name, department, is_active, joining_date)
+            VALUES (%s, %s, %s, %s, %s)
         """
         cursor.executemany(insert_emp_query, EMPLOYEES_DATA)
 

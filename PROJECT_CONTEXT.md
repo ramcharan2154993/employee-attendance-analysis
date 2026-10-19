@@ -4,7 +4,7 @@
 A beginner Python project. MySQL stores employees and daily attendance. Python reads it, Pandas groups and counts, NumPy does percentages, Matplotlib draws charts. Output: monthly report, employee attendance %, department summary, absenteeism chart. Interface: a simple command-line menu (src/main.py) and a Flask web app (src/web/), both calling the same modules. Neither interface contains SQL or percentage formulas.
 
 ## Stack (do not add other packages without asking)
-mysql-connector-python, pandas, numpy, matplotlib, python-dotenv, pytest, flask. No other web packages (no Flask-WTF, no Flask-SQLAlchemy, no Flask-Login). MySQL is the main database. No SQLite, no CSV as the main store. Load query results into Pandas from the cursor (fetchall), not with read_sql.
+mysql-connector-python, pandas, numpy, matplotlib, python-dotenv, pytest, flask, waitress. No other web packages (no Flask-WTF, no Flask-SQLAlchemy, no Flask-Login). Login is built by hand with Flask sessions and werkzeug.security password hashing. MySQL is the main database. No SQLite, no CSV as the main store. Load query results into Pandas from the cursor (fetchall), not with read_sql.
 
 ## Environment
 Windows. Terminal: Antigravity terminal (PowerShell). A virtual environment lives in ./venv. Always run Python and pip through it, for example: .\venv\Scripts\python.exe script.py and .\venv\Scripts\python.exe -m pip install ... Do not rely on (venv) showing in the terminal. Do not change any PowerShell or Windows setting.
@@ -27,6 +27,7 @@ Windows. Terminal: Antigravity terminal (PowerShell). A virtual environment live
 ## Database design
 employees(employee_id INT AUTO_INCREMENT PK, employee_code VARCHAR(20) NOT NULL UNIQUE, employee_name VARCHAR(100) NOT NULL, department VARCHAR(50) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT TRUE)
 attendance(attendance_id INT AUTO_INCREMENT PK, employee_id INT NOT NULL, attendance_date DATE NOT NULL, status ENUM('Present','Absent','Leave','Holiday') NOT NULL, UNIQUE KEY uq_employee_date (employee_id, attendance_date), FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE RESTRICT ON UPDATE RESTRICT)
+users(user_id INT AUTO_INCREMENT PK, username VARCHAR(50) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL, is_active BOOLEAN NOT NULL DEFAULT TRUE, failed_attempts INT NOT NULL DEFAULT 0, locked_until DATETIME NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP). Added for login. Users are never deleted, only deactivated. Only password hashes are stored.
 Duplicates are blocked by MySQL's UNIQUE key, not only by Python.
 
 ## Folder structure (create a file only when its phase needs it)
@@ -36,10 +37,10 @@ docs/rules.md
 src/__init__.py, db.py, employees.py, attendance.py, calculations.py, analysis.py, reports.py, visualizations.py, main.py
 tests/test_employees.py, test_attendance.py, test_calculations.py, test_reports.py
 output/.gitkeep
-Web (added later): src/web/__init__.py (create_app), src/web/routes.py, src/web/templates/ (HTML files), tests/test_web.py
+Web (added later): src/web/__init__.py (create_app), src/web/routes.py, src/web/templates/ (HTML files), src/auth.py, src/web/auth_routes.py, src/wsgi.py, scripts/create_user.py, tests/test_web.py, tests/test_auth.py, tests/test_deploy.py
 
 ## Environment variables (names only, values live in .env)
-DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME, FLASK_SECRET_KEY
+DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME, FLASK_SECRET_KEY, APP_SECURE_COOKIES, DB_SSL_CA
 
 ## Security rules
 - Never hardcode, print, or log passwords. Never open, create, edit, or print the .env file.
@@ -47,10 +48,12 @@ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME, FLASK_SECRET_KEY
 - Parameterized SQL only (never build SQL with f-strings or string joins).
 - Never use the MySQL root account in the project.
 - Sample data is clearly fake. No real people.
-- Web app: runs only on 127.0.0.1 with debug mode OFF. There is no login, so it must never be exposed to a network.
+- Web app: locally it runs on 127.0.0.1 with debug mode OFF. When hosted publicly it must sit behind the host's HTTPS, with debug OFF, served by waitress (never Flask's built-in server), and EVERY page except the login page requires a logged-in user.
 - Web app: FLASK_SECRET_KEY comes only from .env, is never printed or hardcoded.
 - Web app: every form that changes data checks a CSRF token kept in the Flask session (no extra packages). Templates rely on Jinja auto-escaping; never use the "safe" filter or Markup on user text.
 - Web app: no SQL and no percentage formulas in src/web. Pages never delete anything.
+- Login: users are "heads" with full access (view, add, correct, holiday, deactivate). There is no public sign-up and no public page except /login. Passwords are hashed with werkzeug.security, at least 12 characters, and are never printed, logged, or stored in plain text. Login errors never say whether the username or the password was wrong. After 5 failed attempts an account is locked for 15 minutes. Sessions expire after 8 hours; logout clears the session; login and logout use the CSRF token. The first user is created by a command-line script that asks for the password with getpass; passwords never go through any chat or prompt.
+- Hosting: only fake sample data goes to a public server until the project owner explicitly decides otherwise. Real employee data is personal data and needs the owner's own decision first. Cloud database credentials live only in the host's settings, never in files or Git.
 
 ## Code rules
 Beginner-friendly. Meaningful names. Type hints. A short docstring on every public function. Handle expected errors (duplicate, bad status, missing employee) with clear messages. Never hide an exception silently. Keep calculations free of database code so they can be tested alone. No unrequested features.

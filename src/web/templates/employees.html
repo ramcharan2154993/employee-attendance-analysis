@@ -3,60 +3,73 @@
 {% block title %}Employees - Employee Attendance Analysis System{% endblock %}
 
 {% block content %}
+<div class="actions-bar">
+    <a href="/employees/new" class="btn btn-primary">+ Add Employee</a>
+</div>
+
 <div class="card">
-    <h1>Employees</h1>
+    <h1 style="margin-bottom: 1.25rem;">Employee Directory</h1>
     <form action="/employees" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div>
-            <label for="q">Search: </label>
-            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Name or department...">
+        <div style="flex: 1; min-width: 220px;">
+            <label for="q" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Search Staff:</label>
+            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Search by code, name, or department..." style="width: 100%;">
         </div>
-        <div>
-            <label>
+        <div style="padding-top: 1.4rem;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-weight: 500;">
                 <input type="checkbox" name="include_inactive" value="1"{% if include_inactive %} checked{% endif %}>
                 Include inactive
             </label>
         </div>
-        <button type="submit">Filter</button>
+        <div style="padding-top: 1.4rem; display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="/employees" class="btn btn-secondary">Clear</a>
+        </div>
     </form>
 </div>
 
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for emp in employees %}
-            <tr>
-                <td>{{ emp.employee_code }}</td>
-                <td>{{ emp.employee_name }}</td>
-                <td>{{ emp.department }}</td>
-                <td>
-                    {% if emp.is_active %}
-                    <span class="badge-active">Active</span>
-                    {% else %}
-                    <span class="badge-inactive">Inactive</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if emp.is_active %}
-                    <a href="/employees/{{ emp.employee_code }}/edit" style="color: var(--primary); margin-right: 0.75rem;">Edit</a>
-                    <a href="/employees/{{ emp.employee_code }}/deactivate" style="color: var(--danger);">Deactivate</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5">No employees found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 110px;">Code</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th style="width: 140px;">Joining Date</th>
+                    <th style="width: 110px;">Status</th>
+                    <th style="width: 160px; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td><strong style="color: var(--primary);">{{ emp.employee_code }}</strong></td>
+                    <td>{{ emp.employee_name }}</td>
+                    <td style="color: var(--text-muted);">{{ emp.department }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ emp.joining_date }}</td>
+                    <td>
+                        {% if emp.is_active %}
+                        <span class="badge-active">Active</span>
+                        {% else %}
+                        <span class="badge-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if emp.is_active %}
+                        <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action" style="margin-right: 0.4rem;">Edit</a>
+                        <a href="/employees/{{ emp.employee_code }}/deactivate" class="btn-action" style="color: var(--danger); border-color: rgba(244, 63, 94, 0.3);">Deactivate</a>
+                        {% else %}
+                        <span style="color: var(--text-dim); font-size: 0.85rem;">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No employees found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

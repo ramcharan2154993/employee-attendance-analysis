@@ -40,8 +40,70 @@ def require_test_database(database_name: str) -> None:
         )
 
 
+def migrate_schema(
+    conn: MySQLConnectionAbstract,
+    fallback_date: str = "2026-09-01",
+) -> None:
+    """Safely and idempotently migrate database schema to ensure joining_date exists.
+
+    1. Detects whether joining_date column already exists in employees table.
+    2. If missing, adds it as nullable.
+    3. Backfills existing records with earliest attendance date, or fallback_date.
+    4. Confirms no NULL values remain.
+    5. Modifies column to NOT NULL.
+    6. Safe to rerun and recovers from partially completed migrations without data loss.
+    """
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SHOW TABLES LIKE 'employees'")
+        if not cursor.fetchone():
+            return
+
+        cursor.execute("SHOW COLUMNS FROM employees LIKE 'joining_date'")
+        col_info = cursor.fetchone()
+
+        if col_info is None:
+            cursor.execute("ALTER TABLE employees ADD COLUMN joining_date DATE NULL")
+            conn.commit()
+            cursor.execute("SHOW COLUMNS FROM employees LIKE 'joining_date'")
+            col_info = cursor.fetchone()
+
+        cursor.execute("SELECT COUNT(*) FROM employees WHERE joining_date IS NULL")
+        (null_count,) = cursor.fetchone()
+        if null_count > 0:
+            cursor.execute(
+                """
+                UPDATE employees e
+                LEFT JOIN (
+                    SELECT employee_id, MIN(attendance_date) AS min_date
+                    FROM attendance
+                    GROUP BY employee_id
+                ) a ON e.employee_id = a.employee_id
+                SET e.joining_date = COALESCE(a.min_date, %s)
+                WHERE e.joining_date IS NULL
+                """,
+                (fallback_date,),
+            )
+            conn.commit()
+
+        cursor.execute("SELECT COUNT(*) FROM employees WHERE joining_date IS NULL")
+        (remaining_nulls,) = cursor.fetchone()
+        if remaining_nulls > 0:
+            raise RuntimeError(
+                f"Migration failed: {remaining_nulls} employees still have NULL joining_date."
+            )
+
+        if col_info and col_info[2] == "YES":
+            cursor.execute(
+                "ALTER TABLE employees MODIFY COLUMN joining_date DATE NOT NULL"
+            )
+            conn.commit()
+    finally:
+        cursor.close()
+
+
 def apply_schema(database_name: str) -> None:
-    """Read database/schema.sql and apply each SQL statement to the specified database."""
+    """Read database/schema.sql, apply each statement, and execute schema migrations."""
     schema_path = Path(__file__).resolve().parent.parent / "database" / "schema.sql"
     with open(schema_path, "r", encoding="utf-8") as f:
         sql_content = f.read()
@@ -55,5 +117,7 @@ def apply_schema(database_name: str) -> None:
             cursor.execute(statement)
         conn.commit()
         cursor.close()
+        migrate_schema(conn)
     finally:
         conn.close()
+

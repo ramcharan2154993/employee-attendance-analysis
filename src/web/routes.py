@@ -16,10 +16,16 @@ from src.analysis import (
     absenteeism_ranking,
     department_summary,
     employee_summary,
+    get_dashboard_summary,
     load_attendance_df,
 )
 from src.attendance import get_attendance
-from src.employees import list_employees, search_employees
+from src.employees import (
+    get_recent_employees,
+    list_departments,
+    list_employees,
+    search_employees,
+)
 from src.reports import (
     export_charts,
     format_absenteeism_report,
@@ -55,11 +61,30 @@ def _parse_date_filters() -> tuple[datetime.date | None, datetime.date | None]:
 
 @bp.route("/", methods=["GET"])
 def index() -> str:
-    """Render home dashboard displaying active employee count and navigation."""
+    """Render home dashboard displaying active employee count, KPIs, charts, and recent staff."""
     conn = get_db()
     active_employees = list_employees(conn, include_inactive=False)
     active_count = len(active_employees)
-    return render_template("index.html", active_count=active_count)
+    metrics = get_dashboard_summary(conn)
+    recent_employees = get_recent_employees(conn, limit=5)
+
+    output_dir = current_app.config["OUTPUT_DIR"]
+    chart_path = Path(output_dir) / "monthly_attendance.png"
+    if not chart_path.exists():
+        try:
+            export_charts(conn, metrics["year"], metrics["month"], output_dir=output_dir)
+        except Exception:
+            pass
+    has_chart = chart_path.exists()
+
+    return render_template(
+        "index.html",
+        active_count=active_count,
+        metrics=metrics,
+        recent_employees=recent_employees,
+        has_chart=has_chart,
+    )
+
 
 
 @bp.route("/employees", methods=["GET"])
@@ -69,7 +94,7 @@ def employees_view() -> str:
     q = request.args.get("q", "").strip()
     include_inactive = request.args.get("include_inactive") == "1"
     if q:
-        employees = search_employees(conn, q)
+        employees = search_employees(conn, q, include_inactive=include_inactive)
     else:
         employees = list_employees(conn, include_inactive=include_inactive)
     return render_template(
@@ -82,9 +107,10 @@ def employees_view() -> str:
 
 @bp.route("/attendance", methods=["GET"])
 def attendance_view() -> str:
-    """Render attendance log with optional employee and date range filters."""
+    """Render attendance log with optional employee, department, and date range filters."""
     conn = get_db()
     emp_code = request.args.get("employee", "").strip() or None
+    dept_filter = request.args.get("department", "").strip() or None
     start_str = request.args.get("start", "").strip()
     end_str = request.args.get("end", "").strip()
 
@@ -105,16 +131,22 @@ def attendance_view() -> str:
     if start_date and end_date and start_date > end_date:
         raise ValueError("start_date cannot be after end_date.")
 
+    departments = list_departments(conn)
+    employees = list_employees(conn, include_inactive=True, department=dept_filter)
     records = get_attendance(
         conn,
         employee_code=emp_code,
         start_date=start_date,
         end_date=end_date,
+        department=dept_filter,
     )
     return render_template(
         "attendance.html",
         records=records,
         employee=emp_code or "",
+        department=dept_filter or "",
+        departments=departments,
+        employees=employees,
         start=start_str,
         end=end_str,
     )
@@ -129,7 +161,11 @@ def summary_employees_view() -> str:
     summary_df = employee_summary(df)
     report_text = format_employee_report(summary_df)
     return render_template(
-        "text_report.html", title="Employee Summary", report_text=report_text
+        "text_report.html",
+        title="Employee Summary",
+        report_text=report_text,
+        start=start_date.isoformat() if start_date else "",
+        end=end_date.isoformat() if end_date else "",
     )
 
 
@@ -142,7 +178,11 @@ def summary_departments_view() -> str:
     summary_df = department_summary(df)
     report_text = format_department_report(summary_df)
     return render_template(
-        "text_report.html", title="Department Summary", report_text=report_text
+        "text_report.html",
+        title="Department Summary",
+        report_text=report_text,
+        start=start_date.isoformat() if start_date else "",
+        end=end_date.isoformat() if end_date else "",
     )
 
 
@@ -156,7 +196,11 @@ def ranking_view() -> str:
     ranking_df = absenteeism_ranking(summary_df)
     report_text = format_absenteeism_report(ranking_df)
     return render_template(
-        "text_report.html", title="Absenteeism Ranking", report_text=report_text
+        "text_report.html",
+        title="Absenteeism Ranking",
+        report_text=report_text,
+        start=start_date.isoformat() if start_date else "",
+        end=end_date.isoformat() if end_date else "",
     )
 
 
@@ -166,17 +210,23 @@ def report_view() -> str:
     conn = get_db()
     year_str = request.args.get("year", "").strip()
     month_str = request.args.get("month", "").strip()
-    try:
-        year = int(year_str)
-        month = int(month_str)
-    except (ValueError, TypeError) as exc:
-        raise ValueError("Year and month must be valid numbers.") from exc
+    if not year_str and not month_str:
+        year = 2026
+        month = 9
+    else:
+        try:
+            year = int(year_str)
+            month = int(month_str)
+        except (ValueError, TypeError) as exc:
+            raise ValueError("Year and month must be valid numbers.") from exc
 
     report_text = generate_monthly_report(conn, year, month)
     return render_template(
         "text_report.html",
         title=f"Monthly Report - {year:04d}-{month:02d}",
         report_text=report_text,
+        year=year,
+        month=month,
     )
 
 
@@ -186,11 +236,15 @@ def charts_view() -> str:
     conn = get_db()
     year_str = request.args.get("year", "").strip()
     month_str = request.args.get("month", "").strip()
-    try:
-        year = int(year_str)
-        month = int(month_str)
-    except (ValueError, TypeError) as exc:
-        raise ValueError("Year and month must be valid numbers.") from exc
+    if not year_str and not month_str:
+        year = 2026
+        month = 9
+    else:
+        try:
+            year = int(year_str)
+            month = int(month_str)
+        except (ValueError, TypeError) as exc:
+            raise ValueError("Year and month must be valid numbers.") from exc
 
     output_dir = current_app.config["OUTPUT_DIR"]
     export_charts(conn, year, month, output_dir=output_dir)

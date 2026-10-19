@@ -314,3 +314,52 @@ def test_no_sql_keywords_in_main_file():
     content = Path("src/main.py").read_text(encoding="utf-8")
     for keyword in ["SELECT", "INSERT", "UPDATE", "DELETE"]:
         assert keyword not in content
+
+
+def test_record_department_attendance_menu_all_present(conn):
+    """Option 15 records department attendance marking all Present."""
+    inp, out, collected = _make_io(
+        [
+            "1",
+            "E050",
+            "Alice Smith",
+            "Support",
+            "1",
+            "E051",
+            "Bob Jones",
+            "Support",
+            "15",
+            "Support",
+            "2026-09-08",
+            "y",
+            "0",
+        ]
+    )
+    run_menu(conn, input_fn=inp, output_fn=out)
+    full_text = "\n".join(collected)
+    assert "Recorded attendance for 2 employee(s) in Support on 2026-09-08 (2 Present, 0 Absent, 0 Leave)." in full_text
+
+
+def test_record_department_attendance_menu_conflict_error(conn):
+    """Option 15 prints Error if attendance already exists on that date."""
+    inp, out, collected = _make_io(
+        [
+            "1",
+            "E052",
+            "Conflict Tester",
+            "DevOps",
+            "6",
+            "E052",
+            "2026-09-08",
+            "Present",
+            "15",
+            "DevOps",
+            "2026-09-08",
+            "y",
+            "0",
+        ]
+    )
+    run_menu(conn, input_fn=inp, output_fn=out)
+    full_text = "\n".join(collected)
+    assert "Error: Attendance already recorded" in full_text
+

@@ -1,8 +1,9 @@
-"""Pytest fixtures for database testing."""
-
+import os
 import pytest
 import config
 from src.db import apply_schema, get_connection, require_test_database
+
+os.environ.setdefault("DEFAULT_JOINING_DATE", "2026-09-01")
 
 
 @pytest.fixture

@@ -242,7 +242,7 @@ def test_db_load_attendance_and_summaries(conn):
 
 
 def test_db_load_attendance_empty_table(conn):
-    """With no employees at all, load_attendance_df returns an empty DataFrame with the 6 columns."""
+    """With no employees at all, load_attendance_df returns an empty DataFrame with the expected columns."""
     df_empty = load_attendance_df(conn)
     assert len(df_empty) == 0
     assert list(df_empty.columns) == [
@@ -250,6 +250,7 @@ def test_db_load_attendance_empty_table(conn):
         "employee_name",
         "department",
         "is_active",
+        "joining_date",
         "attendance_date",
         "status",
     ]

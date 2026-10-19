@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS employees (
     employee_code VARCHAR(20) NOT NULL UNIQUE,
     employee_name VARCHAR(100) NOT NULL,
     department VARCHAR(50) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    joining_date DATE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS attendance (

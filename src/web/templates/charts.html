@@ -3,9 +3,31 @@
 {% block title %}Charts - {{ "%04d-%02d"|format(year, month) }} - Employee Attendance Analysis System{% endblock %}
 
 {% block content %}
+<div class="actions-bar" style="margin-bottom: 1.25rem;">
+    <a href="/summary/employees" class="btn btn-secondary btn-sm">Employee Summary</a>
+    <a href="/summary/departments" class="btn btn-secondary btn-sm">Department Summary</a>
+    <a href="/ranking" class="btn btn-secondary btn-sm">Absenteeism Ranking</a>
+    <a href="/report?year={{ year }}&month={{ month }}" class="btn btn-secondary btn-sm">Monthly Report</a>
+    <a href="/charts?year={{ year }}&month={{ month }}" class="btn btn-primary btn-sm">Charts</a>
+</div>
+
+<div class="card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
+    <form action="/charts" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <div>
+            <label for="chart_year" style="display: block; margin-bottom: 0.35rem; font-weight: 500; font-size: 0.85rem;">Year:</label>
+            <input type="number" id="chart_year" name="year" value="{{ year }}" required style="width: 110px;">
+        </div>
+        <div>
+            <label for="chart_month" style="display: block; margin-bottom: 0.35rem; font-weight: 500; font-size: 0.85rem;">Month:</label>
+            <input type="number" id="chart_month" name="month" min="1" max="12" value="{{ month }}" required style="width: 90px;">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">View Charts</button>
+    </form>
+</div>
+
 <div class="card">
-    <h1>Visual Charts ({{ "%04d-%02d"|format(year, month) }})</h1>
-    <p style="color: var(--text-muted);">Attendance trends and absenteeism ranking for the selected period.</p>
+    <h1 style="margin-bottom: 0.35rem;">Visual Analytics ({{ "%04d-%02d"|format(year, month) }})</h1>
+    <p style="color: var(--text-muted); margin-bottom: 0;">Attendance trends and absenteeism ranking for the selected period.</p>
 </div>
 
 <div class="card">

@@ -13,9 +13,11 @@ from src.analysis import (
     load_attendance_df,
 )
 from src.attendance import (
+    ALLOWED_DAILY_STATUSES,
     VALID_STATUSES,
     get_attendance,
     record_attendance,
+    record_department_attendance,
     record_holiday,
     update_attendance,
 )
@@ -23,6 +25,7 @@ from src.db import get_connection
 from src.employees import (
     add_employee,
     deactivate_employee,
+    get_department_employees,
     list_employees,
     search_employees,
     update_employee,
@@ -291,6 +294,53 @@ def _handle_export_charts(
     output_fn(f"Exported charts:\n- {paths[0]}\n- {paths[1]}")
 
 
+def _handle_record_department_attendance(
+    conn: MySQLConnectionAbstract,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> None:
+    dept = input_fn("Enter department: ").strip()
+    date_str = input_fn("Enter date (YYYY-MM-DD): ").strip()
+    att_date = _parse_date(date_str)
+
+    eligible = get_department_employees(
+        conn, dept, active_only=True, eligible_as_of=att_date
+    )
+    if not eligible:
+        output_fn(
+            f"No eligible active employees found in department '{dept}' on {att_date}."
+        )
+        return
+
+    output_fn(f"Found {len(eligible)} eligible employee(s) in {dept}:")
+    for emp in eligible:
+        output_fn(
+            f"  {emp['employee_code']} - {emp['employee_name']} (Joined: {emp['joining_date']})"
+        )
+
+    mark_all = input_fn("Mark all as Present? (y/n): ").strip().lower()
+    entries = []
+    if mark_all == "y":
+        for emp in eligible:
+            entries.append(
+                {"employee_code": emp["employee_code"], "status": "Present"}
+            )
+    else:
+        for emp in eligible:
+            st = input_fn(
+                f"Enter status for {emp['employee_code']} ({', '.join(ALLOWED_DAILY_STATUSES)}) [Present]: "
+            ).strip().capitalize()
+            if not st:
+                st = "Present"
+            entries.append({"employee_code": emp["employee_code"], "status": st})
+
+    res = record_department_attendance(conn, dept, att_date, entries)
+    output_fn(
+        f"Recorded attendance for {res['total_records']} employee(s) in {dept} on {att_date} "
+        f"({res['present_count']} Present, {res['absent_count']} Absent, {res['leave_count']} Leave)."
+    )
+
+
 HANDLERS = {
     "1": _handle_add_employee,
     "2": _handle_list_employees,
@@ -306,6 +356,7 @@ HANDLERS = {
     "12": _handle_absenteeism_ranking,
     "13": _handle_monthly_report,
     "14": _handle_export_charts,
+    "15": _handle_record_department_attendance,
 }
 
 
@@ -331,10 +382,11 @@ def run_menu(
         output_fn("12. Absenteeism ranking")
         output_fn("13. Monthly report")
         output_fn("14. Export charts")
+        output_fn("15. Record department attendance")
         output_fn("0. Exit")
 
         try:
-            choice = input_fn("Enter choice (0-14): ").strip()
+            choice = input_fn("Enter choice (0-15): ").strip()
         except EOFError:
             break
 

@@ -1,0 +1,93 @@
+{# Reusable UI Macros for HR Dashboard #}
+
+{% macro avatar_circle(name, size="md") %}
+{% set parts = name.strip().split() %}
+{% if parts|length > 1 %}
+    {% set initials = (parts[0][0] + parts[-1][0])|upper %}
+{% elif parts|length == 1 and parts[0]|length > 0 %}
+    {% set initials = parts[0][0]|upper %}
+{% else %}
+    {% set initials = "?" %}
+{% endif %}
+<div class="avatar-circle avatar-circle-{{ size }}" title="{{ name }}">
+    <span>{{ initials }}</span>
+</div>
+{% endmacro %}
+
+{% macro status_pill(status) %}
+{% set s = status|lower %}
+{% if s == 'present' or s == 'active' %}
+    <span class="badge badge-present">{{ status }}</span>
+{% elif s == 'absent' or s == 'inactive' %}
+    <span class="badge badge-absent">{{ status }}</span>
+{% elif s == 'leave' %}
+    <span class="badge badge-leave">{{ status }}</span>
+{% elif s == 'holiday' %}
+    <span class="badge badge-holiday">{{ status }}</span>
+{% else %}
+    <span class="badge badge-neutral">{{ status }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro kpi_card(label, value, badge_text, color="blue", icon_name="users") %}
+<div class="kpi-card kpi-card-{{ color }}">
+    <div class="kpi-top">
+        <div class="kpi-icon-chip kpi-icon-{{ color }}">
+            {% if icon_name == 'users' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            {% elif icon_name == 'check-circle' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            {% elif icon_name == 'alert-triangle' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            {% elif icon_name == 'calendar' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            {% else %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            {% endif %}
+        </div>
+        {% if badge_text %}
+        <span class="kpi-badge kpi-badge-{{ color }}">{{ badge_text }}</span>
+        {% endif %}
+    </div>
+    <div>
+        <div class="kpi-label">{{ label }}</div>
+        <div class="kpi-value">{{ value }}</div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro empty_state(title, message, action_url="", action_text="") %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+    </div>
+    <div class="empty-state-title">{{ title }}</div>
+    <p class="empty-state-text">{{ message }}</p>
+    {% if action_url and action_text %}
+    <a href="{{ action_url }}" class="btn btn-primary btn-sm">{{ action_text }}</a>
+    {% endif %}
+</div>
+{% endmacro %}

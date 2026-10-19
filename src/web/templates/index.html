@@ -1,53 +1,102 @@
 {% extends "base.html" %}
+{% from "_components.html" import kpi_card, avatar_circle, status_pill, empty_state %}
 
-{% block title %}Dashboard - Employee Attendance Analysis System{% endblock %}
+{% block title %}Attendance Overview - Employee Attendance Analysis System{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Employee Attendance Analysis System</h1>
-    <p style="font-size: 1.1rem; color: var(--text-muted);">
-        Active Employees: <strong style="color: var(--accent);">{{ active_count }}</strong>
-    </p>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1 class="page-header-title">Attendance Overview</h1>
+        <p class="page-header-subtitle">Real-time health indicators of your organization's human capital and attendance dynamics.</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="/attendance/department" class="btn btn-secondary">Record Department</a>
+        <a href="/holidays/new" class="btn btn-secondary">Record Holiday</a>
+        <a href="/employees/new" class="btn btn-primary">+ Add Employee</a>
+    </div>
 </div>
 
-<div class="card">
-    <h2>Monthly Report Generation</h2>
-    <form action="/report" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div>
-            <label for="year">Year: </label>
-            <input type="number" id="year" name="year" value="2026" required style="width: 100px;">
-        </div>
-        <div>
-            <label for="month">Month: </label>
-            <input type="number" id="month" name="month" min="1" max="12" value="9" required style="width: 80px;">
-        </div>
-        <button type="submit">View Monthly Report</button>
-    </form>
+<!-- Row of 4 KPI Cards -->
+<div class="kpi-grid">
+    {{ kpi_card('ACTIVE EMPLOYEES', active_count, 'Total Staff', 'blue', 'users') }}
+    
+    {% set att_val = ("%.1f"|format(metrics.attendance_pct) ~ "%") if metrics.attendance_pct is not none else "N/A" %}
+    {{ kpi_card('ATTENDANCE RATE', att_val, metrics.month_name, 'green', 'check-circle') }}
+    
+    {% set abs_val = ("%.1f"|format(metrics.absenteeism_pct) ~ "%") if metrics.absenteeism_pct is not none else "N/A" %}
+    {{ kpi_card('ABSENTEEISM RATE', abs_val, metrics.month_name, 'orange', 'alert-triangle') }}
+    
+    {{ kpi_card('LEAVE DAYS', metrics.leave, metrics.month_name, 'slate', 'calendar') }}
 </div>
 
-<div class="card">
-    <h2>Chart Exports</h2>
-    <form action="/charts" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div>
-            <label for="chart_year">Year: </label>
-            <input type="number" id="chart_year" name="year" value="2026" required style="width: 100px;">
+<!-- Main 2-Column Dashboard Grid -->
+<div class="dashboard-grid">
+    <!-- Left Column: Department Attendance Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Department Attendance</h2>
+                <p class="card-subtitle">Aggregated presence and engagement trends across departments</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="/charts" class="btn btn-secondary btn-sm">Visual Analytics &rarr;</a>
+            </div>
         </div>
-        <div>
-            <label for="chart_month">Month: </label>
-            <input type="number" id="chart_month" name="month" min="1" max="12" value="9" required style="width: 80px;">
-        </div>
-        <button type="submit">View Visual Charts</button>
-    </form>
-</div>
 
-<div class="card">
-    <h2>Quick Navigation</h2>
-    <ul>
-        <li><a href="/employees">Employee Directory</a> - View active and inactive staff, search profiles.</li>
-        <li><a href="/attendance">Attendance Log</a> - Inspect daily employee records and filter by date.</li>
-        <li><a href="/summary/employees">Employee Summary Table</a> - Aggregated attendance metrics per employee.</li>
-        <li><a href="/summary/departments">Department Summary Table</a> - Organization-wide department statistics.</li>
-        <li><a href="/ranking">Absenteeism Ranking</a> - Employees ranked by absenteeism rate.</li>
-    </ul>
+        <div style="text-align: center; margin: 12px 0;">
+            {% if has_chart %}
+                <img src="/charts/file/monthly_attendance.png" alt="Department Attendance Trends" class="chart-img">
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-title">No Chart Data Available</div>
+                    <p class="empty-state-text">Attendance charts will be automatically generated once monthly logs are recorded.</p>
+                    <a href="/attendance/department" class="btn btn-primary btn-sm">Record Attendance Now</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+            <a href="/summary/employees" class="btn btn-secondary btn-sm">Employee Summary</a>
+            <a href="/summary/departments" class="btn btn-secondary btn-sm">Department Summary</a>
+            <a href="/ranking" class="btn btn-secondary btn-sm">Absenteeism Ranking</a>
+            <a href="/report?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm">Monthly Report</a>
+        </div>
+    </div>
+
+    <!-- Right Column: Recently Joined Staff -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Recently Joined</h2>
+                <p class="card-subtitle">New talent in this organization</p>
+            </div>
+        </div>
+
+        <div class="recent-list">
+            {% if recent_employees %}
+                {% for emp in recent_employees %}
+                <div class="recent-item">
+                    {{ avatar_circle(emp.employee_name, 'md') }}
+                    <div class="recent-info">
+                        <div class="recent-name">{{ emp.employee_name }}</div>
+                        <div class="recent-dept">{{ emp.department }} &bull; {{ emp.employee_code }}</div>
+                    </div>
+                    <div class="recent-date" title="Joining Date">
+                        {{ emp.joining_date }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 24px 0;">
+                    No employee records found.
+                </p>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 18px; text-align: center; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+            <a href="/employees" style="font-size: 0.88rem; font-weight: 600; color: var(--primary);">View all employees &rarr;</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

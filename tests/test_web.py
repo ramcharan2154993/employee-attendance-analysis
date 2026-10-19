@@ -56,8 +56,8 @@ def test_create_app_testing_with_main_database_raises_value_error() -> None:
 
 def test_create_app_missing_secret_key_raises_runtime_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """create_app without a secret key (TESTING false, SECRET_KEY empty) must raise RuntimeError."""
-    monkeypatch.setattr(config, "FLASK_SECRET_KEY", None)
-    with pytest.raises(RuntimeError, match="FLASK_SECRET_KEY is not set in .env"):
+    monkeypatch.setattr(config, "SECRET_KEY", None)
+    with pytest.raises(RuntimeError, match="SECRET_KEY is not set in environment or config"):
         create_app({"TESTING": False, "SECRET_KEY": ""})
 
 

@@ -1,5 +1,6 @@
 from functools import wraps
 import hmac
+import os
 import secrets
 from typing import Any
 from flask import Flask, current_app, g, redirect, render_template, request, session, url_for
@@ -37,15 +38,23 @@ def login_required(f):
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     """Create and configure the Flask web application."""
     app = Flask(__name__)
-    app.debug = False
+
+    # Debug is strictly OFF by default; only allowed when FLASK_DEBUG=1 in local development
+    flask_debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    if config.APP_ENV == "production":
+        flask_debug = False
+    app.debug = flask_debug
+
+    is_production = (config.APP_ENV == "production") and not (test_config and test_config.get("TESTING"))
 
     app.config.from_mapping(
-        SECRET_KEY=config.FLASK_SECRET_KEY,
+        SECRET_KEY=config.SECRET_KEY,
         DATABASE_NAME=None,
         OUTPUT_DIR="output",
         TESTING=False,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=is_production,
     )
 
     if test_config:
@@ -61,7 +70,26 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
 
     secret_key = app.config.get("SECRET_KEY")
     if not secret_key:
-        raise RuntimeError("FLASK_SECRET_KEY is not set in .env")
+        raise RuntimeError("SECRET_KEY is not set in environment or config.")
+
+    # In production, refuse to start if SECRET_KEY is missing, too short, or a placeholder
+    if config.APP_ENV == "production" and not app.config.get("TESTING"):
+        placeholders = {
+            "generate-a-long-random-value",
+            "change_me",
+            "placeholder",
+            "your_secret_key",
+            "secret",
+            "secret_key",
+        }
+        if secret_key.lower().strip() in placeholders or "change_me" in secret_key.lower():
+            raise RuntimeError(
+                "Production mode requires a real, cryptographically random SECRET_KEY, not a placeholder."
+            )
+        if len(secret_key) < 32:
+            raise RuntimeError(
+                "Production mode requires a SECRET_KEY with minimum length of 32 characters."
+            )
 
     @app.teardown_appcontext
     def teardown_db(exception: Any = None) -> None:
@@ -74,8 +102,12 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'"
+            "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'"
         )
+        if config.APP_ENV == "production" and not app.config.get("TESTING"):
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
         return response
 
     @app.errorhandler(404)
@@ -122,6 +154,8 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         return {
             "csrf_token": csrf_token,
             "current_user": g.get("current_user"),
+            "APP_NAME": config.APP_NAME,
+            "APP_TAGLINE": config.APP_TAGLINE,
         }
 
     @app.before_request
@@ -148,7 +182,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
 
         if require_auth and g.current_user is None:
             endpoint = request.endpoint
-            exempt = {"routes.login", "static"}
+            exempt = {"routes.login", "static", "routes.healthz"}
             if endpoint and endpoint not in exempt:
                 if request.method == "GET":
                     target = request.full_path if request.query_string else request.path
@@ -186,6 +220,24 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     app.register_blueprint(bp)
     app.register_blueprint(write_bp)
 
+    # Configure ProxyFix for reverse proxies (PythonAnywhere, Nginx, Render)
+    default_proxy_count = 1 if config.APP_ENV == "production" else 0
+    try:
+        trusted_proxies = int(os.getenv("TRUSTED_PROXY_COUNT", str(default_proxy_count)))
+    except (ValueError, TypeError):
+        trusted_proxies = default_proxy_count
+
+    if trusted_proxies > 0 and not app.config.get("TESTING"):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=trusted_proxies,
+            x_proto=trusted_proxies,
+            x_host=trusted_proxies,
+            x_port=trusted_proxies,
+            x_prefix=trusted_proxies,
+        )
+
     return app
 
 
@@ -203,12 +255,7 @@ def run() -> None:
         try:
             from src.db import apply_schema
             apply_schema(config.DB_NAME)
-            conn = get_db()
-            from src.auth import provision_initial_admin
-            admin_user, admin_pwd = provision_initial_admin(conn)
-            if admin_pwd:
-                app.logger.info("Initial admin user '%s' provisioned.", admin_user)
         except Exception as e:
-            app.logger.warning("Admin auto-provision skipped: %s", e)
+            app.logger.warning("Schema check skipped: %s", e)
     app.run(host="127.0.0.1", port=5000, debug=False)
 

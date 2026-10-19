@@ -64,6 +64,12 @@ def _parse_date_filters() -> tuple[datetime.date | None, datetime.date | None]:
     return start_date, end_date
 
 
+@bp.route("/healthz", methods=["GET"])
+def healthz() -> Any:
+    """Lightweight health check endpoint returning 'ok' without database access or info leak."""
+    return "ok", 200, {"Content-Type": "text/plain; charset=utf-8"}
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login() -> Any:
     """Render login page and process session authentication."""
@@ -72,21 +78,48 @@ def login() -> Any:
         password = request.form.get("password", "")
         next_url = request.form.get("next", "").strip()
 
+        from src.rate_limiter import login_limiter
+        client_ip = request.remote_addr or "127.0.0.1"
+
+        blocked, remaining_sec, reason = login_limiter.check_login_attempt(client_ip, username)
+        if blocked:
+            minutes = (remaining_sec + 59) // 60
+            scope_desc = "from your IP address" if reason == "ip" else "for this account"
+            return (
+                render_template(
+                    "login.html",
+                    error=f"Too many failed login attempts {scope_desc}. Please try again in {minutes} minute(s).",
+                    username=username,
+                    next=next_url,
+                ),
+                429,
+            )
+
         conn = get_db()
         from src.auth import authenticate_user
 
         user = authenticate_user(conn, username, password)
         if not user:
+            is_blocked, remaining_sec, reason = login_limiter.register_login_failure(client_ip, username)
+            if is_blocked:
+                minutes = (remaining_sec + 59) // 60
+                scope_desc = "from your IP address" if reason == "ip" else "for this account"
+                err_msg = f"Too many failed login attempts {scope_desc}. Account temporarily locked for {minutes} minute(s)."
+                status_code = 429
+            else:
+                err_msg = "Invalid username or password."
+                status_code = 401
             return (
                 render_template(
                     "login.html",
-                    error="Invalid username or password.",
+                    error=err_msg,
                     username=username,
                     next=next_url,
                 ),
-                401,
+                status_code,
             )
 
+        login_limiter.register_login_success(client_ip, username)
         session.clear()
         session["user_id"] = user["user_id"]
         session["username"] = user["username"]

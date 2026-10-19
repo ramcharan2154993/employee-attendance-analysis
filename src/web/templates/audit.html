@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="actions-bar">
+    <a href="/attendance" class="btn btn-secondary btn-sm">&larr; Back to Attendance Hub</a>
+    <a href="/attendance/department" class="btn btn-secondary btn-sm">Department Bulk Attendance</a>
+    <a href="/attendance/correct" class="btn btn-secondary btn-sm">Correct Attendance</a>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h1 style="font-size: 1.4rem; color: #0f172a; margin: 0 0 0.25rem 0;">Attendance Audit Trail</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                Immutable, append-only historical audit records for all attendance creations and administrative corrections.
+            </p>
+        </div>
+        <span class="badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.82rem; padding: 4px 10px;">
+            🔒 Append-Only Trail
+        </span>
+    </div>
+
+    <!-- Filters -->
+    <form action="/audit" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+        <div style="flex: 1; min-width: 160px;">
+            <label for="employee" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Employee Code:</label>
+            <input type="text" id="employee" name="employee" value="{{ employee }}" placeholder="e.g. E001" style="width: 100%;">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label for="action" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Action Type:</label>
+            <select id="action" name="action" style="width: 100%;">
+                <option value="">All Actions</option>
+                <option value="CREATE" {% if action == 'CREATE' %}selected{% endif %}>Creation</option>
+                <option value="CORRECT" {% if action == 'CORRECT' %}selected{% endif %}>Correction</option>
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 135px;">
+            <label for="start" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Start Date:</label>
+            <input type="date" id="start" name="start" value="{{ start }}" style="width: 100%;">
+        </div>
+        <div style="flex: 1; min-width: 135px;">
+            <label for="end" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">End Date:</label>
+            <input type="date" id="end" name="end" value="{{ end }}" style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="submit" class="btn btn-primary">Filter Logs</button>
+            <a href="/audit" class="btn btn-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    {% if records %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span style="font-size: 0.9rem; color: var(--text-muted);">
+            Showing <strong>{{ records|length }}</strong> of <strong>{{ total_records }}</strong> audit log entries &bull; Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+        </span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            {% if page > 1 %}
+            <a href="/audit?page={{ page - 1 }}&employee={{ employee }}&action={{ action }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+            {% endif %}
+            {% if page < total_pages %}
+            <a href="/audit?page={{ page + 1 }}&employee={{ employee }}&action={{ action }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 150px;">Timestamp</th>
+                    <th style="width: 90px; text-align: center;">Action</th>
+                    <th style="width: 100px;">Employee</th>
+                    <th>Employee Name</th>
+                    <th style="width: 105px;">Att. Date</th>
+                    <th style="width: 160px; text-align: center;">Status Transition</th>
+                    <th>Reason / Notes</th>
+                    <th style="width: 120px;">Operator</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td style="color: var(--text-muted); font-size: 0.82rem;">{{ r.created_at }}</td>
+                    <td style="text-align: center;">
+                        {% if r.action_type == 'CREATE' %}
+                        <span class="badge badge-present" style="font-size: 0.72rem;">CREATE</span>
+                        {% elif r.action_type == 'CORRECT' %}
+                        <span class="badge badge-leave" style="font-size: 0.72rem;">CORRECT</span>
+                        {% else %}
+                        <span class="badge" style="font-size: 0.72rem;">{{ r.action_type }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/employees/{{ r.employee_id }}/analytics" style="text-decoration: none; font-weight: 600; color: var(--primary);">
+                            {{ r.employee_code }}
+                        </a>
+                    </td>
+                    <td>{{ r.employee_name }}</td>
+                    <td style="font-size: 0.88rem; color: var(--text-muted);">{{ r.attendance_date }}</td>
+                    <td style="text-align: center; font-size: 0.88rem;">
+                        {% if r.previous_status %}
+                            <span class="badge badge-{{ r.previous_status|lower }}" style="padding: 1px 6px; font-size: 0.75rem;">{{ r.previous_status }}</span>
+                            <span style="color: var(--text-dim); margin: 0 4px;">&rarr;</span>
+                        {% endif %}
+                        <span class="badge badge-{{ r.new_status|lower }}" style="padding: 1px 6px; font-size: 0.75rem;">{{ r.new_status }}</span>
+                    </td>
+                    <td style="font-size: 0.88rem; color: #334155;">
+                        {{ r.correction_reason or '&mdash;' }}
+                    </td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">
+                        {% if r.username %}
+                            <strong>{{ r.username }}</strong>
+                        {% elif r.user_id %}
+                            User #{{ r.user_id }}
+                        {% else %}
+                            <span style="color: var(--text-dim);">System</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Page {{ page }} of {{ total_pages }} ({{ total_records }} total records)</span>
+        <div style="display: flex; gap: 0.5rem;">
+            {% if page > 1 %}
+            <a href="/audit?page={{ page - 1 }}&employee={{ employee }}&action={{ action }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+            {% endif %}
+            {% if page < total_pages %}
+            <a href="/audit?page={{ page + 1 }}&employee={{ employee }}&action={{ action }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+        <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 0.35rem;">No audit records found</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+            No actions match the selected audit trail criteria.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

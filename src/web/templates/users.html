@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Employee Attendance Analysis System{% endblock %}
+
+{% block content %}
+<div class="actions-bar">
+    <a href="/" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    <a href="/audit" class="btn btn-secondary btn-sm">View Audit Trail</a>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h1 style="font-size: 1.4rem; color: #0f172a; margin: 0 0 0.25rem 0;">System User Accounts</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                Role-based access control. Authorized accounts can access HR workflows and administration.
+            </p>
+        </div>
+        <span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.85rem; padding: 4px 10px;">
+            Admin Only Access
+        </span>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger" style="margin-bottom: 1.25rem;">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.75rem;">
+        <h3 style="font-size: 1.05rem; margin-top: 0; margin-bottom: 0.75rem; color: #1e293b;">
+            + Provision New User Account
+        </h3>
+        <form action="/users/new" method="POST" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div style="flex: 1; min-width: 170px;">
+                <label for="new_username" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Username:</label>
+                <input type="text" id="new_username" name="username" required placeholder="e.g. hr_manager" style="width: 100%;">
+            </div>
+
+            <div style="flex: 1; min-width: 170px;">
+                <label for="new_password" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Password (min 6 chars):</label>
+                <input type="password" id="new_password" name="password" required minlength="6" placeholder="Enter secure password" style="width: 100%;">
+            </div>
+
+            <div style="flex: 1; min-width: 130px;">
+                <label for="new_role" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Role:</label>
+                <select id="new_role" name="role" style="width: 100%;">
+                    <option value="HR" selected>HR</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th>Username</th>
+                    <th style="width: 120px; text-align: center;">Role</th>
+                    <th style="width: 120px; text-align: center;">Account Status</th>
+                    <th style="width: 180px;">Created Date</th>
+                    <th style="width: 140px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td style="color: var(--text-dim);">#{{ u.user_id }}</td>
+                    <td>
+                        <strong style="color: #0f172a;">{{ u.username }}</strong>
+                        {% if current_user and current_user.user_id == u.user_id %}
+                        <span style="font-size: 0.75rem; color: var(--primary); margin-left: 0.35rem;">(You)</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if u.role == 'Admin' %}
+                        <span class="badge" style="background: #fdf4ff; color: #a855f7; border: 1px solid #f0abfc;">Admin</span>
+                        {% else %}
+                        <span class="badge" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">HR</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if u.is_active %}
+                        <span class="badge badge-present">Active</span>
+                        {% else %}
+                        <span class="badge badge-absent">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ u.created_at }}</td>
+                    <td style="text-align: center;">
+                        <form action="/users/{{ u.user_id }}/toggle" method="POST" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if u.is_active %}
+                            <button type="submit" class="btn-action" style="color: #dc2626; border-color: #fca5a5; font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                                Deactivate
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn-action" style="color: #16a34a; border-color: #86efac; font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                                Activate
+                            </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

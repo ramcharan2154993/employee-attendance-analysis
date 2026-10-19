@@ -91,6 +91,24 @@
             </select>
         </div>
 
+        {% if 'Correct' in title %}
+        <div>
+            <label for="reason" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">
+                Correction Reason <span style="color: var(--danger); font-size: 0.85rem;">* (Required for audit log)</span>:
+            </label>
+            <input type="text"
+                   id="reason"
+                   name="reason"
+                   value="{{ reason or '' }}"
+                   placeholder="e.g. Employee provided doctor certificate for sick leave"
+                   required
+                   style="width: 100%;">
+            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
+                All corrections are permanently logged in the audit trail with your username and timestamp.
+            </small>
+        </div>
+        {% endif %}
+
         <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem;">
             <button type="submit" class="btn btn-primary">Save Attendance</button>
             <a href="/attendance" class="btn btn-secondary">Cancel</a>

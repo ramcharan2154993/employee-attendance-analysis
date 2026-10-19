@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}{{ data.employee.employee_name }} ({{ data.employee.employee_code }}) - Employee Analytics Profile{% endblock %}
+
+{% block content %}
+<div class="actions-bar">
+    <a href="/employees" class="btn btn-secondary btn-sm">&larr; Back to Employee Directory</a>
+    <a href="/attendance?view=log&employee={{ data.employee.employee_code }}" class="btn btn-secondary btn-sm">View Employee Attendance Logs</a>
+    <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}" class="btn btn-secondary btn-sm">Correct Attendance</a>
+</div>
+
+<!-- Employee Header Card -->
+<div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+                <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a;">{{ data.employee.employee_name }}</h1>
+                <span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 600; font-size: 0.85rem;">
+                    {{ data.employee.employee_code }}
+                </span>
+                {% if data.employee.is_active %}
+                <span class="badge badge-present">Active Employee</span>
+                {% else %}
+                <span class="badge badge-absent">Inactive</span>
+                {% endif %}
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.95rem; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                <span><strong>Department:</strong> {{ data.employee.department }}</span>
+                <span><strong>Joining Date:</strong> {{ data.employee.joining_date }}</span>
+                <span><strong>Current Reporting Period:</strong> <span style="color: var(--primary); font-weight: 600;">{{ data.reporting_period }}</span></span>
+            </div>
+        </div>
+
+        <!-- Period Selector Filter Form -->
+        <form action="/employees/{{ data.employee.employee_id }}/analytics" method="GET" style="display: flex; gap: 0.5rem; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem;">
+            <label for="month_filter" style="font-size: 0.85rem; font-weight: 500; color: #475569;">Period:</label>
+            <select id="month_filter" name="filter_period" style="font-size: 0.85rem; padding: 0.35rem 0.6rem;" onchange="this.form.submit()">
+                <option value="">All Time History</option>
+                {% for y, m, label in data.available_months %}
+                <option value="{{ y }}-{{ m }}" {% if data.selected_year == y and data.selected_month == m %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">Apply</button>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance KPI Cards -->
+<div class="stat-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card">
+        <div class="stat-title">Eligible Working Days</div>
+        <div class="stat-value" style="color: #0f172a;">{{ data.kpis.eligible_days }}</div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Present + Absent + Leave</span>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Present Days</div>
+        <div class="stat-value" style="color: #10b981;">{{ data.kpis.present }}</div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Recorded present on duty</span>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Absent Days</div>
+        <div class="stat-value" style="color: #ef4444;">{{ data.kpis.absent }}</div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Unexcused absences</span>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Approved Leave</div>
+        <div class="stat-value" style="color: #f59e0b;">{{ data.kpis.leave }}</div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Medical / Casual leave</span>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Attendance Rate</div>
+        <div class="stat-value" style="color: #10b981;">
+            {% if data.kpis.attendance_pct is not none %}
+                {{ "%.1f"|format(data.kpis.attendance_pct) }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Present / Eligible &times; 100</span>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Absenteeism Rate</div>
+        <div class="stat-value" style="color: {% if data.kpis.absenteeism_pct and data.kpis.absenteeism_pct > 15 %}#ef4444{% else %}#64748b{% endif %};">
+            {% if data.kpis.absenteeism_pct is not none %}
+                {{ "%.1f"|format(data.kpis.absenteeism_pct) }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-dim);">Absent / Eligible &times; 100</span>
+    </div>
+</div>
+
+<!-- Department Comparison Benchmark -->
+<div class="card" style="margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid var(--border);">
+    <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; color: #1e293b;">
+        Department Benchmark: {{ data.department_comparison.department }}
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; font-size: 0.9rem;">
+        <div>
+            <span style="color: var(--text-muted); display: block;">Department Attendance Rate:</span>
+            <strong style="color: #10b981; font-size: 1.15rem;">
+                {% if data.department_comparison.attendance_pct is not none %}
+                    {{ "%.1f"|format(data.department_comparison.attendance_pct) }}%
+                </strong>
+                {% if data.kpis.attendance_pct is not none %}
+                    {% set diff = data.kpis.attendance_pct - data.department_comparison.attendance_pct %}
+                    <span style="font-size: 0.8rem; color: {% if diff >= 0 %}#10b981{% else %}#ef4444{% endif %}; margin-left: 0.35rem;">
+                        ({% if diff >= 0 %}+{% endif %}{{ "%.1f"|format(diff) }}% vs dept)
+                    </span>
+                {% endif %}
+                {% else %}
+                    N/A
+                </strong>
+                {% endif %}
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block;">Department Absenteeism Rate:</span>
+            <strong style="color: #ef4444; font-size: 1.15rem;">
+                {% if data.department_comparison.absenteeism_pct is not none %}
+                    {{ "%.1f"|format(data.department_comparison.absenteeism_pct) }}%
+                {% else %}
+                    N/A
+                {% endif %}
+            </strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block;">Total Department Eligible Days:</span>
+            <strong style="color: #0f172a; font-size: 1.15rem;">{{ data.department_comparison.eligible_days }}</strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block;">Aggregate Calculation Rule:</span>
+            <span style="color: var(--text-dim); font-size: 0.82rem;">Calculated across sum of departmental records (not averages of percentages).</span>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizations Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 1.1rem; color: #0f172a; margin-bottom: 0.75rem;">
+            Monthly Attendance Trend
+        </h3>
+        <div style="text-align: center;">
+            <img src="/charts/file/{{ trend_chart }}" alt="Monthly Attendance Trend" style="max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border);">
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 1.1rem; color: #0f172a; margin-bottom: 0.75rem;">
+            Attendance Status Distribution
+        </h3>
+        <div style="text-align: center;">
+            <img src="/charts/file/{{ dist_chart }}" alt="Attendance Distribution" style="max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border);">
+        </div>
+    </div>
+</div>
+
+<!-- Recent Absences & Leaves with Correction Links -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #0f172a;">Recent Absences &amp; Leave Records</h3>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Direct links to correct mistaken records</span>
+        </div>
+        <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}" class="btn btn-secondary btn-sm">
+            + New Correction
+        </a>
+    </div>
+
+    {% if data.recent_exceptions %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 130px;">Attendance Date</th>
+                    <th style="width: 120px; text-align: center;">Current Status</th>
+                    <th>Audit Status</th>
+                    <th style="width: 140px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ex in data.recent_exceptions %}
+                <tr>
+                    <td style="font-weight: 500;">{{ ex.attendance_date }}</td>
+                    <td style="text-align: center;">
+                        <span class="badge badge-{{ ex.status|lower }}">{{ ex.status }}</span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">
+                        Record #{{ ex.attendance_id }}
+                    </td>
+                    <td style="text-align: center;">
+                        <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}&attendance_date={{ ex.attendance_date }}" class="btn-action" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                            Correct Record
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: #10b981; margin: 0; font-size: 0.95rem; padding: 1rem 0; text-align: center;">
+        ✓ Excellent attendance! No absences or leaves recorded in this period.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Monthly Performance Breakdown -->
+<div class="card">
+    <h3 style="margin-top: 0; font-size: 1.15rem; color: #0f172a; margin-bottom: 1rem;">
+        Monthly History Breakdown
+    </h3>
+
+    {% if data.monthly_trends %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th style="text-align: center;">Eligible Days</th>
+                    <th style="text-align: center;">Present</th>
+                    <th style="text-align: center;">Absent</th>
+                    <th style="text-align: center;">Leave</th>
+                    <th style="text-align: center;">Holiday</th>
+                    <th style="text-align: center;">Attendance %</th>
+                    <th style="text-align: center;">Absenteeism %</th>
+                    <th style="text-align: center;">Filter</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in data.monthly_trends %}
+                <tr>
+                    <td><strong>{{ m.label }}</strong></td>
+                    <td style="text-align: center;">{{ m.eligible_days }}</td>
+                    <td style="text-align: center; color: #10b981; font-weight: 500;">{{ m.present }}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: 500;">{{ m.absent }}</td>
+                    <td style="text-align: center; color: #f59e0b; font-weight: 500;">{{ m.leave }}</td>
+                    <td style="text-align: center; color: #3b82f6;">{{ m.holiday }}</td>
+                    <td style="text-align: center; font-weight: 600; color: #10b981;">
+                        {% if m.attendance_pct is not none %}{{ "%.1f"|format(m.attendance_pct) }}%{% else %}N/A{% endif %}
+                    </td>
+                    <td style="text-align: center; font-weight: 600; color: {% if m.absenteeism_pct and m.absenteeism_pct > 10 %}#ef4444{% else %}#64748b{% endif %};">
+                        {% if m.absenteeism_pct is not none %}{{ "%.1f"|format(m.absenteeism_pct) }}%{% else %}N/A{% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <a href="/employees/{{ data.employee.employee_id }}/analytics?year={{ m.year }}&month={{ m.month }}" class="btn-action" style="font-size: 0.78rem; padding: 0.2rem 0.5rem;">
+                            View Month
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); text-align: center; padding: 1.5rem 0;">No monthly records found.</p>
+    {% endif %}
+</div>
+{% endblock %}

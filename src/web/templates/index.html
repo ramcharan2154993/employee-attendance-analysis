@@ -3,6 +3,10 @@
 
 {% block title %}Attendance Overview - Employee Attendance Analysis System{% endblock %}
 
+{% block extra_head %}
+<meta http-equiv="refresh" content="60">
+{% endblock %}
+
 {% block content %}
 <!-- Page Header -->
 <div class="page-header">
@@ -11,9 +15,30 @@
         <p class="page-header-subtitle">Real-time health indicators of your organization's human capital and attendance dynamics.</p>
     </div>
     <div class="page-header-actions">
+        <a href="/?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary" title="Refresh Dashboard Data (Auto-refreshes every 60s)">
+            &#x21bb; Refresh
+        </a>
         <a href="/attendance/department" class="btn btn-secondary">Record Department</a>
         <a href="/holidays/new" class="btn btn-secondary">Record Holiday</a>
         <a href="/employees/new" class="btn btn-primary">+ Add Employee</a>
+    </div>
+</div>
+
+<!-- Reporting Period Selector Toolbar -->
+<div class="card" style="padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Reporting Period:</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            {% for y, m, m_name in available_months %}
+            <a href="/?year={{ y }}&month={{ m }}" class="btn btn-sm {% if metrics.year == y and metrics.month == m %}btn-primary{% else %}btn-secondary{% endif %}" style="height: 32px; padding: 4px 14px; font-size: 0.85rem;">
+                {{ m_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted);">
+        Viewing <strong style="color: var(--text-headings);">{{ metrics.month_name }}</strong>
+        &bull; <span>{{ metrics.eligible_days }} eligible record{% if metrics.eligible_days != 1 %}s{% endif %} ({{ metrics.present }} Present, {{ metrics.absent }} Absent, {{ metrics.leave }} Leave)</span>
     </div>
 </div>
 
@@ -32,21 +57,21 @@
 
 <!-- Main 2-Column Dashboard Grid -->
 <div class="dashboard-grid">
-    <!-- Left Column: Department Attendance Chart -->
+    <!-- Left Column: Attendance Trends & Analytics Chart -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h2 class="card-title">Department Attendance</h2>
-                <p class="card-subtitle">Aggregated presence and engagement trends across departments</p>
+                <h2 class="card-title">Attendance Trends &amp; Analytics</h2>
+                <p class="card-subtitle">Monthly attendance trajectory and organization-wide engagement ({{ metrics.month_name }})</p>
             </div>
             <div style="display: flex; gap: 8px;">
-                <a href="/charts" class="btn btn-secondary btn-sm">Visual Analytics &rarr;</a>
+                <a href="/charts?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm">Ranking Chart &rarr;</a>
             </div>
         </div>
 
         <div style="text-align: center; margin: 12px 0;">
             {% if has_chart %}
-                <img src="/charts/file/monthly_attendance.png" alt="Department Attendance Trends" class="chart-img">
+                <img src="/charts/file/monthly_attendance.png" alt="Monthly Attendance Trends" class="chart-img">
             {% else %}
                 <div class="empty-state">
                     <div class="empty-state-title">No Chart Data Available</div>
@@ -57,10 +82,10 @@
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
-            <a href="/summary/employees" class="btn btn-secondary btn-sm">Employee Summary</a>
+            <a href="/report?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm">Monthly Report ({{ metrics.month_name }})</a>
+            <a href="/charts?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm">Absenteeism Chart</a>
             <a href="/summary/departments" class="btn btn-secondary btn-sm">Department Summary</a>
-            <a href="/ranking" class="btn btn-secondary btn-sm">Absenteeism Ranking</a>
-            <a href="/report?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm">Monthly Report</a>
+            <a href="/summary/employees" class="btn btn-secondary btn-sm">Employee Summary</a>
         </div>
     </div>
 
@@ -76,16 +101,16 @@
         <div class="recent-list">
             {% if recent_employees %}
                 {% for emp in recent_employees %}
-                <div class="recent-item">
+                <a href="/employees/{{ emp.employee_id }}/analytics" class="recent-item" style="text-decoration: none; color: inherit; display: flex;" title="View analytics for {{ emp.employee_name }}">
                     {{ avatar_circle(emp.employee_name, 'md') }}
                     <div class="recent-info">
-                        <div class="recent-name">{{ emp.employee_name }}</div>
-                        <div class="recent-dept">{{ emp.department }} &bull; {{ emp.employee_code }}</div>
+                        <div class="recent-name" style="color: #0f172a; font-weight: 500;">{{ emp.employee_name }}</div>
+                        <div class="recent-dept">{{ emp.department }} &bull; <strong style="color: var(--primary);">{{ emp.employee_code }}</strong></div>
                     </div>
                     <div class="recent-date" title="Joining Date">
                         {{ emp.joining_date }}
                     </div>
-                </div>
+                </a>
                 {% endfor %}
             {% else %}
                 <p style="color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 24px 0;">

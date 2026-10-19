@@ -43,8 +43,16 @@
             <tbody>
                 {% for emp in employees %}
                 <tr>
-                    <td><strong style="color: var(--primary);">{{ emp.employee_code }}</strong></td>
-                    <td>{{ emp.employee_name }}</td>
+                    <td>
+                        <a href="/employees/{{ emp.employee_id }}/analytics" style="text-decoration: none; font-weight: 600; color: var(--primary);" title="View analytics">
+                            {{ emp.employee_code }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="/employees/{{ emp.employee_id }}/analytics" style="text-decoration: none; color: #0f172a; font-weight: 500;" title="View analytics profile">
+                            {{ emp.employee_name }}
+                        </a>
+                    </td>
                     <td style="color: var(--text-muted);">{{ emp.department }}</td>
                     <td style="color: var(--text-muted); font-size: 0.9rem;">{{ emp.joining_date }}</td>
                     <td>
@@ -55,8 +63,9 @@
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
+                        <a href="/employees/{{ emp.employee_id }}/analytics" class="btn-action" style="margin-right: 0.35rem; color: #4f46e5; border-color: #c7d2fe;">Analytics</a>
                         {% if emp.is_active %}
-                        <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action" style="margin-right: 0.4rem;">Edit</a>
+                        <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action" style="margin-right: 0.35rem;">Edit</a>
                         <a href="/employees/{{ emp.employee_code }}/deactivate" class="btn-action" style="color: var(--danger); border-color: rgba(244, 63, 94, 0.3);">Deactivate</a>
                         {% else %}
                         <span style="color: var(--text-dim); font-size: 0.85rem;">None</span>

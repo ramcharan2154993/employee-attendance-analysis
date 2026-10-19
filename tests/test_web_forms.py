@@ -734,8 +734,8 @@ def test_attendance_log_enhancements(client: Any, conn: Any) -> None:
     record_attendance(conn, "E070", att_date, "Present")
     record_attendance(conn, "E071", att_date, "Present")
 
-    # Default attendance log view
-    res = client.get("/attendance")
+    # Explicit attendance log view
+    res = client.get("/attendance?view=log")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
     assert "John Doe" in html

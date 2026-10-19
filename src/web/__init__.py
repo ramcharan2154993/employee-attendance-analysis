@@ -1,10 +1,37 @@
+from functools import wraps
 import hmac
 import secrets
 from typing import Any
-from flask import Flask, current_app, g, render_template, request, session
+from flask import Flask, current_app, g, redirect, render_template, request, session, url_for
 import mysql.connector
 import config
 from src.db import get_connection, require_test_database
+
+
+def role_required(*allowed_roles: str):
+    """Decorator to enforce role-based access control on routes."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args: Any, **kwargs: Any) -> Any:
+            user = g.get("current_user")
+            if not user:
+                return redirect(url_for("routes.login", next=request.path))
+            if allowed_roles and user.get("role") not in allowed_roles:
+                return (
+                    render_template(
+                        "error.html",
+                        message="Forbidden: You do not have permission to access this resource.",
+                    ),
+                    403,
+                )
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+def login_required(f):
+    """Decorator requiring an authenticated user."""
+    return role_required()(f)
 
 
 def create_app(test_config: dict[str, Any] | None = None) -> Flask:
@@ -86,16 +113,54 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         return render_template("error.html", message=f"Error: {error}"), 400
 
     @app.context_processor
-    def inject_csrf_token() -> dict[str, Any]:
+    def inject_template_globals() -> dict[str, Any]:
         def csrf_token() -> str:
             if "csrf_token" not in session:
                 session["csrf_token"] = secrets.token_hex(16)
             return session["csrf_token"]
 
-        return {"csrf_token": csrf_token}
+        return {
+            "csrf_token": csrf_token,
+            "current_user": g.get("current_user"),
+        }
 
     @app.before_request
-    def check_csrf_token() -> Any:
+    def load_user_and_authenticate() -> Any:
+        user_id = session.get("user_id")
+        if user_id:
+            g.current_user = {
+                "user_id": user_id,
+                "username": session.get("username"),
+                "role": session.get("role", "HR"),
+            }
+        else:
+            g.current_user = None
+
+        require_auth = app.config.get(
+            "REQUIRE_AUTH", not app.config.get("TESTING", False)
+        )
+        if not require_auth and g.current_user is None:
+            g.current_user = {
+                "user_id": 1,
+                "username": "admin",
+                "role": "Admin",
+            }
+
+        if require_auth and g.current_user is None:
+            endpoint = request.endpoint
+            exempt = {"routes.login", "static"}
+            if endpoint and endpoint not in exempt:
+                if request.method == "GET":
+                    target = request.full_path if request.query_string else request.path
+                    return redirect(url_for("routes.login", next=target))
+                return (
+                    render_template(
+                        "error.html",
+                        message="Unauthorized: Please sign in to continue.",
+                    ),
+                    401,
+                )
+
         if request.method == "POST":
             if request.url_rule is None:
                 return None
@@ -134,4 +199,16 @@ def get_db() -> Any:
 def run() -> None:
     """Run the Flask web server on local interface."""
     app = create_app()
+    with app.app_context():
+        try:
+            from src.db import apply_schema
+            apply_schema(config.DB_NAME)
+            conn = get_db()
+            from src.auth import provision_initial_admin
+            admin_user, admin_pwd = provision_initial_admin(conn)
+            if admin_pwd:
+                app.logger.info("Initial admin user '%s' provisioned.", admin_user)
+        except Exception as e:
+            app.logger.warning("Admin auto-provision skipped: %s", e)
     app.run(host="127.0.0.1", port=5000, debug=False)
+

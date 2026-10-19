@@ -102,6 +102,45 @@ def migrate_schema(
         cursor.close()
 
 
+def migrate_auth_and_audit(conn: MySQLConnectionAbstract) -> None:
+    """Safely and idempotently ensure users and attendance_audit tables exist."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                role ENUM('Admin', 'HR') NOT NULL DEFAULT 'HR',
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS attendance_audit (
+                audit_id INT AUTO_INCREMENT PRIMARY KEY,
+                attendance_id INT NULL,
+                employee_id INT NOT NULL,
+                attendance_date DATE NOT NULL,
+                action_type ENUM('CREATE', 'CORRECT') NOT NULL,
+                previous_status ENUM('Present', 'Absent', 'Leave', 'Holiday') NULL,
+                new_status ENUM('Present', 'Absent', 'Leave', 'Holiday') NOT NULL,
+                correction_reason TEXT NULL,
+                user_id INT NULL,
+                username VARCHAR(50) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+
+
 def apply_schema(database_name: str) -> None:
     """Read database/schema.sql, apply each statement, and execute schema migrations."""
     schema_path = Path(__file__).resolve().parent.parent / "database" / "schema.sql"
@@ -118,6 +157,8 @@ def apply_schema(database_name: str) -> None:
         conn.commit()
         cursor.close()
         migrate_schema(conn)
+        migrate_auth_and_audit(conn)
     finally:
         conn.close()
+
 

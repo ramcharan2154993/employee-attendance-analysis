@@ -15,10 +15,13 @@ def conn():
 
     connection = get_connection(test_db)
     cursor = connection.cursor()
+    cursor.execute("DELETE FROM attendance_audit")
     cursor.execute("DELETE FROM attendance")
     cursor.execute("DELETE FROM employees")
+    cursor.execute("DELETE FROM users")
     connection.commit()
     cursor.close()
+
 
     yield connection
 

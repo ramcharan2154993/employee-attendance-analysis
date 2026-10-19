@@ -6,6 +6,7 @@ from flask import (
     Blueprint,
     abort,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -28,9 +29,64 @@ from src.employees import (
     list_employees,
     update_employee,
 )
-from src.web import get_db
+from src.web import get_db, role_required
 
 write_bp = Blueprint("write_routes", __name__)
+
+
+@write_bp.route("/users/new", methods=["POST"])
+@role_required("Admin")
+def new_user() -> Any:
+    """Create a new user account with role ('Admin' or 'HR')."""
+    conn = get_db()
+    from src.auth import create_user
+
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    role = request.form.get("role", "HR").strip()
+
+    try:
+        create_user(conn, username, password, role)
+        flash(f"User '{username}' created successfully.")
+        return redirect("/users", code=302)
+    except ValueError as exc:
+        from src.auth import list_users
+
+        users = list_users(conn)
+        return (
+            render_template(
+                "users.html",
+                users=users,
+                error=f"Error: {exc}",
+            ),
+            400,
+        )
+
+
+@write_bp.route("/users/<int:user_id>/toggle", methods=["POST"])
+@role_required("Admin")
+def toggle_user(user_id: int) -> Any:
+    """Toggle active/inactive status of a user account."""
+    conn = get_db()
+    from src.auth import toggle_user_status
+
+    try:
+        new_status = toggle_user_status(conn, user_id)
+        status_text = "activated" if new_status else "deactivated"
+        flash(f"User account {status_text}.")
+        return redirect("/users", code=302)
+    except ValueError as exc:
+        from src.auth import list_users
+
+        users = list_users(conn)
+        return (
+            render_template(
+                "users.html",
+                users=users,
+                error=f"Error: {exc}",
+            ),
+            400,
+        )
 
 
 @write_bp.route("/employees/new", methods=["GET", "POST"])
@@ -165,7 +221,14 @@ def new_attendance() -> Any:
                 att_date = datetime.date.fromisoformat(date_str)
             except (ValueError, TypeError) as exc:
                 raise ValueError(f"Invalid date: '{date_str}'") from exc
-            record_attendance(conn, emp_code, att_date, status)
+
+            user = g.get("current_user")
+            user_id = user.get("user_id") if user else None
+            username = user.get("username") if user else None
+
+            record_attendance(
+                conn, emp_code, att_date, status, user_id=user_id, username=username
+            )
             flash("Attendance recorded.")
             return redirect("/attendance", code=302)
         except ValueError as exc:
@@ -206,20 +269,54 @@ def new_attendance() -> Any:
 
 @write_bp.route("/attendance/correct", methods=["GET", "POST"])
 def correct_attendance() -> Any:
-    """Render attendance correction form and modify recorded status."""
+    """Render attendance correction form and modify recorded status with audit trail."""
     conn = get_db()
     if request.method == "POST":
         emp_code = request.form.get("employee_code", "").strip()
         date_str = request.form.get("attendance_date", "").strip()
         status = request.form.get("status", "").strip()
+        reason = request.form.get("reason", "").strip()
+
+        if "reason" in request.form and not reason:
+            employees = list_employees(conn, include_inactive=False)
+            return (
+                render_template(
+                    "attendance_form.html",
+                    title="Correct Attendance",
+                    form_action="/attendance/correct",
+                    valid_statuses=VALID_STATUSES,
+                    employee_code=emp_code,
+                    attendance_date=date_str,
+                    status=status,
+                    reason="",
+                    employees=employees,
+                    error="Error: A correction reason is required.",
+                ),
+                400,
+            )
+
+        effective_reason = reason or "Administrative correction"
         try:
             try:
                 att_date = datetime.date.fromisoformat(date_str)
             except (ValueError, TypeError) as exc:
                 raise ValueError(f"Invalid date: '{date_str}'") from exc
-            update_attendance(conn, emp_code, att_date, status)
-            flash("Attendance corrected.")
-            return redirect("/attendance", code=302)
+
+            user = g.get("current_user")
+            user_id = user.get("user_id") if user else None
+            username = user.get("username") if user else None
+
+            update_attendance(
+                conn,
+                emp_code,
+                att_date,
+                status,
+                reason=effective_reason,
+                user_id=user_id,
+                username=username,
+            )
+            flash(f"Attendance for {emp_code} on {att_date} corrected to {status}.")
+            return redirect(f"/attendance?view=log&employee={emp_code}", code=302)
         except ValueError as exc:
             employees = list_employees(conn, include_inactive=False)
             return (
@@ -231,6 +328,7 @@ def correct_attendance() -> Any:
                     employee_code=emp_code,
                     attendance_date=date_str,
                     status=status,
+                    reason=reason,
                     employees=employees,
                     error=f"Error: {exc}",
                 ),
@@ -251,6 +349,7 @@ def correct_attendance() -> Any:
         employee_code=emp_code,
         attendance_date=date_str,
         status="Present",
+        reason="",
         employees=employees,
         error=None,
     )
@@ -285,23 +384,39 @@ def department_attendance() -> Any:
             except (ValueError, TypeError) as exc:
                 raise ValueError(f"Invalid date: '{date_str}'") from exc
 
-            res = record_department_attendance(conn, dept, att_date, entries)
+            user = g.get("current_user")
+            user_id = user.get("user_id") if user else None
+            username = user.get("username") if user else None
+
+            res = record_department_attendance(
+                conn, dept, att_date, entries, user_id=user_id, username=username
+            )
             flash(
                 f"Successfully recorded attendance for {res['total_records']} employee(s) in {dept} on {att_date} "
                 f"({res['present_count']} Present, {res['absent_count']} Absent, {res['leave_count']} Leave)."
             )
-            return redirect(f"/attendance?department={dept}&start={date_str}&end={date_str}", code=302)
+            return redirect(
+                f"/attendance?view=log&department={dept}&start={date_str}&end={date_str}",
+                code=302,
+            )
         except (ValueError, AttendanceConflictError) as exc:
             conflicts = getattr(exc, "conflicts", [])
             if not conflicts and dept and att_date:
                 conflicts = check_department_attendance_conflicts(conn, dept, att_date)
 
             eligible_employees = []
+            unrecorded_employees = []
+            conflict_codes = {c["employee_code"] for c in conflicts}
             if dept and att_date:
                 try:
                     eligible_employees = get_department_employees(
                         conn, dept, active_only=True, eligible_as_of=att_date
                     )
+                    unrecorded_employees = [
+                        e
+                        for e in eligible_employees
+                        if e["employee_code"] not in conflict_codes
+                    ]
                 except Exception:
                     pass
 
@@ -313,6 +428,8 @@ def department_attendance() -> Any:
                     selected_department=dept,
                     attendance_date=date_str,
                     eligible_employees=eligible_employees,
+                    unrecorded_employees=unrecorded_employees,
+                    recorded_employees=conflicts,
                     submitted_statuses=submitted_map,
                     conflicts=conflicts,
                     error=f"Error: {exc}",
@@ -337,18 +454,29 @@ def department_attendance() -> Any:
         date_error = f"Attendance cannot be recorded on weekends ({att_date})."
 
     eligible_employees = []
+    unrecorded_employees = []
+    recorded_employees = []
     conflicts = []
     dept_error = None
 
     if dept and not date_error and att_date:
         if dept not in departments:
-            dept_error = f"Department '{dept}' does not exist or has no active employees."
+            dept_error = (
+                f"Department '{dept}' does not exist or has no active employees."
+            )
         else:
             try:
                 eligible_employees = get_department_employees(
                     conn, dept, active_only=True, eligible_as_of=att_date
                 )
                 conflicts = check_department_attendance_conflicts(conn, dept, att_date)
+                conflict_codes = {c["employee_code"] for c in conflicts}
+                recorded_employees = conflicts
+                unrecorded_employees = [
+                    e
+                    for e in eligible_employees
+                    if e["employee_code"] not in conflict_codes
+                ]
             except Exception as exc:
                 dept_error = f"Error: {exc}"
 
@@ -358,6 +486,8 @@ def department_attendance() -> Any:
         selected_department=dept,
         attendance_date=date_str,
         eligible_employees=eligible_employees,
+        unrecorded_employees=unrecorded_employees,
+        recorded_employees=recorded_employees,
         submitted_statuses={},
         conflicts=conflicts,
         error=date_error or dept_error,
@@ -375,9 +505,13 @@ def new_holiday() -> Any:
             except (ValueError, TypeError) as exc:
                 raise ValueError(f"Invalid date: '{date_str}'") from exc
             conn = get_db()
-            count = record_holiday(conn, h_date)
+            user = g.get("current_user")
+            user_id = user.get("user_id") if user else None
+            username = user.get("username") if user else None
+
+            count = record_holiday(conn, h_date, user_id=user_id, username=username)
             flash(f"Holiday recorded for {count} employees.")
-            return redirect("/attendance", code=302)
+            return redirect("/attendance?view=log", code=302)
         except ValueError as exc:
             return (
                 render_template(
@@ -397,4 +531,5 @@ def new_holiday() -> Any:
         holiday_date="",
         error=None,
     )
+
 

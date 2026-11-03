@@ -5,28 +5,60 @@
 
 {% block content %}
 <div class="actions-bar">
-    <a href="/attendance" class="btn btn-secondary btn-sm">&larr; Back to Attendance Log</a>
+    <a href="/attendance" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Attendance Hub
+    </a>
 </div>
 
-<div class="card" style="max-width: 520px; margin: 0 auto;">
-    <h1 style="font-size: 1.4rem; margin-bottom: 1.25rem;">{{ title }}</h1>
+<div class="card" style="max-width: 560px; margin: 0 auto; padding: 36px 32px;">
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--holiday-subtle); color: var(--holiday); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        </div>
+        <div>
+            <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--text-headings); margin-bottom: 2px;">{{ title }}</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">Organization-wide calendar event</p>
+        </div>
+    </div>
+
     {% if error %}
-    <div class="alert alert-danger">
-        {{ error }}
+    <div class="alert alert-danger" style="margin-bottom: 20px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
     </div>
     {% endif %}
-    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
-        Recording a holiday will insert a Holiday row for every active employee whose joining date is on or before the selected holiday date.
-    </p>
-    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1.15rem;">
+
+    <div style="background: var(--holiday-subtle); border: 1px solid var(--holiday-border); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 22px;">
+        <p style="color: var(--holiday-text); font-size: 0.875rem; line-height: 1.5; margin: 0;">
+            Recording a public holiday will automatically generate a <strong>Holiday</strong> record for every active employee whose joining date is on or before the selected date.
+        </p>
+    </div>
+
+    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 20px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div>
-            <label for="holiday_date" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Holiday Date:</label>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="holiday_date" class="form-label">Holiday Date:</label>
             <input type="date" id="holiday_date" name="holiday_date" value="{{ holiday_date }}" required style="width: 100%;">
+            <small>The date must be a valid weekday calendar date.</small>
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem;">
-            <button type="submit" class="btn btn-primary">Record Holiday</button>
-            <a href="/attendance" class="btn btn-secondary">Cancel</a>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 10px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">Record Holiday</button>
+            <a href="/attendance" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</a>
         </div>
     </form>
 </div>

@@ -5,33 +5,44 @@
 
 {% block content %}
 <div class="actions-bar">
-    <a href="/attendance" class="btn btn-secondary btn-sm">&larr; Back to Attendance Log</a>
+    <a href="/attendance" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Attendance Hub
+    </a>
     <a href="/attendance/department" class="btn btn-secondary btn-sm">Department Bulk Attendance</a>
 </div>
 
-<div class="card" style="max-width: 560px; margin: 0 auto;">
-    <h1 style="font-size: 1.45rem; margin-bottom: 0.35rem;">{{ title }}</h1>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
-        {% if 'Correct' in title %}
-        Modify an existing daily attendance status.
-        {% else %}
-        Record individual daily attendance for an active employee.
-        {% endif %}
-    </p>
+<div class="card" style="max-width: 600px; margin: 0 auto; padding: 36px 32px;">
+    <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-headings); margin-bottom: 6px;">{{ title }}</h1>
+        <p style="color: var(--text-muted); font-size: 0.9375rem; margin: 0;">
+            {% if 'Correct' in title %}
+            Modify an existing daily attendance status with required audit trail documentation.
+            {% else %}
+            Record an individual daily attendance record for an active employee.
+            {% endif %}
+        </p>
+    </div>
 
     {% if error %}
-    <div class="alert alert-danger">
-        {{ error }}
+    <div class="alert alert-danger" style="margin-bottom: 20px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
     </div>
     {% endif %}
 
-    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1.25rem;">
+    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 20px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div>
-            <label for="employee_code" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">
-                Employee Selector:
-            </label>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="employee_code" class="form-label">Employee Selector:</label>
             <input list="employee_options"
                    id="employee_code"
                    name="employee_code"
@@ -47,44 +58,38 @@
                 </option>
                 {% endfor %}
             </datalist>
-            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
-                Searchable active roster. Type staff name or code; the system submits the verified employee code.
-            </small>
+            <small>Active roster search. You may type either code or name.</small>
 
             {% if employee_code %}
                 {% for emp in employees %}
                     {% if emp.employee_code == employee_code %}
-                    <div style="margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem;">
+                    <div style="margin-top: 10px; padding: 10px 14px; background: #fafcff; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.875rem; display: flex; align-items: center; gap: 10px;">
                         <span style="color: var(--text-muted);">Selected:</span>
-                        <strong style="color: var(--primary);">{{ emp.employee_code }}</strong> &bull;
-                        {{ emp.employee_name }} &bull;
+                        <strong style="color: var(--primary); font-family: var(--font-mono);">{{ emp.employee_code }}</strong>
+                        <span>&bull;</span>
+                        <span style="font-weight: 600; color: var(--text-headings);">{{ emp.employee_name }}</span>
+                        <span>&bull;</span>
                         <span style="color: var(--text-muted);">{{ emp.department }}</span>
-                        <span style="color: var(--text-dim); font-size: 0.8rem;">(Joined: {{ emp.joining_date }})</span>
+                        <span style="color: var(--text-dim); font-size: 0.8125rem;">(Joined: {{ emp.joining_date }})</span>
                     </div>
                     {% endif %}
                 {% endfor %}
             {% endif %}
         </div>
 
-        <div>
-            <label for="attendance_date" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">
-                Attendance Date:
-            </label>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="attendance_date" class="form-label">Attendance Date:</label>
             <input type="date"
                    id="attendance_date"
                    name="attendance_date"
                    value="{{ attendance_date }}"
                    required
                    style="width: 100%;">
-            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
-                Must be a weekday on or after the employee's joining date.
-            </small>
+            <small>Must be a working weekday on or after the employee's joining date.</small>
         </div>
 
-        <div>
-            <label for="status" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">
-                Attendance Status:
-            </label>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="status" class="form-label">Attendance Status:</label>
             <select id="status" name="status" style="width: 100%;">
                 {% for st in valid_statuses %}
                 <option value="{{ st }}"{% if st == status %} selected{% endif %}>{{ st }}</option>
@@ -93,26 +98,26 @@
         </div>
 
         {% if 'Correct' in title %}
-        <div>
-            <label for="reason" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">
-                Correction Reason <span style="color: var(--danger); font-size: 0.85rem;">* (Required for audit log)</span>:
+        <div class="form-group" style="margin-bottom: 0; background: var(--leave-subtle); border: 1px solid var(--leave-border); border-radius: var(--radius-md); padding: 16px;">
+            <label for="reason" class="form-label" style="color: var(--leave-text);">
+                Correction Reason <span style="color: var(--absent); font-weight: 700;">* (Required for Audit Trail)</span>:
             </label>
             <input type="text"
                    id="reason"
                    name="reason"
                    value="{{ reason or '' }}"
-                   placeholder="e.g. Employee provided doctor certificate for sick leave"
+                   placeholder="e.g. Employee submitted medical certificate for sick leave"
                    required
-                   style="width: 100%;">
-            <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.35rem;">
-                All corrections are permanently logged in the audit trail with your username and timestamp.
+                   style="width: 100%; border-color: var(--leave-border);">
+            <small style="color: var(--leave-text);">
+                All changes are permanently logged to the immutable audit trail with your username and timestamp.
             </small>
         </div>
         {% endif %}
 
-        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem;">
-            <button type="submit" class="btn btn-primary">Save Attendance</button>
-            <a href="/attendance" class="btn btn-secondary">Cancel</a>
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">Save Attendance</button>
+            <a href="/attendance" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</a>
         </div>
     </form>
 </div>

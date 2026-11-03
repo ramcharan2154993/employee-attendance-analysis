@@ -4,80 +4,135 @@
 {% block page_title %}Attendance{% endblock %}
 
 {% block content %}
-<!-- Top Action Cards -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1 class="page-header-title">Attendance Operations</h1>
+        <p class="page-header-subtitle">Record daily logs, bulk department attendance, public holidays, and corrections</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="/attendance/department" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Record Department Roster
+        </a>
+    </div>
+</div>
+
+<!-- Top Action Hub Cards (5-Grid) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 28px;">
     <a href="/attendance/department" style="text-decoration: none; display: block;">
-        <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 4px solid var(--primary); height: 100%; transition: transform 0.15s, box-shadow 0.15s;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span style="font-size: 1.25rem;">🏢</span>
-                <strong style="color: #0f172a; font-size: 1.05rem;">Department Attendance</strong>
+        <div class="card" style="margin-bottom: 0; padding: 22px; border-top: 4px solid var(--primary); height: 100%; transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--primary-subtle); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <strong style="color: var(--text-headings); font-size: 1.05rem;">Department Attendance</strong>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-                Primary workflow. Bulk mark active staff by department.
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0; line-height: 1.45;">
+                Primary workflow. Rapid bulk attendance marking by department roster.
             </p>
         </div>
     </a>
 
     <a href="/attendance/new" style="text-decoration: none; display: block;">
-        <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 4px solid #10b981; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span style="font-size: 1.25rem;">👤</span>
-                <strong style="color: #0f172a; font-size: 1.05rem;">Single Attendance</strong>
+        <div class="card" style="margin-bottom: 0; padding: 22px; border-top: 4px solid var(--present); height: 100%; transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--present-subtle); color: var(--present); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <strong style="color: var(--text-headings); font-size: 1.05rem;">Single Attendance</strong>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-                Record individual attendance entry for an active employee.
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0; line-height: 1.45;">
+                Record individual daily attendance for a specific employee.
             </p>
         </div>
     </a>
 
     <a href="/holidays/new" style="text-decoration: none; display: block;">
-        <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 4px solid #3b82f6; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span style="font-size: 1.25rem;">🎉</span>
-                <strong style="color: #0f172a; font-size: 1.05rem;">Record Holiday</strong>
+        <div class="card" style="margin-bottom: 0; padding: 22px; border-top: 4px solid var(--holiday); height: 100%; transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--holiday-subtle); color: var(--holiday); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <strong style="color: var(--text-headings); font-size: 1.05rem;">Record Holiday</strong>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-                Apply organization-wide holiday for active employees.
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0; line-height: 1.45;">
+                Apply organization-wide public holiday to all active employees.
             </p>
         </div>
     </a>
 
     <a href="/attendance?view=log" style="text-decoration: none; display: block;">
-        <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 4px solid #6366f1; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span style="font-size: 1.25rem;">📋</span>
-                <strong style="color: #0f172a; font-size: 1.05rem;">View Attendance Log</strong>
+        <div class="card" style="margin-bottom: 0; padding: 22px; border-top: 4px solid var(--primary-light); height: 100%; transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--primary-subtle); color: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+                <strong style="color: var(--text-headings); font-size: 1.05rem;">View Attendance Log</strong>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-                Load bounded attendance records with search and pagination.
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0; line-height: 1.45;">
+                Browse historical records with pagination and multi-variable filters.
             </p>
         </div>
     </a>
 
     <a href="/attendance/correct" style="text-decoration: none; display: block;">
-        <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 4px solid #f59e0b; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span style="font-size: 1.25rem;">✏️</span>
-                <strong style="color: #0f172a; font-size: 1.05rem;">Correct Attendance</strong>
+        <div class="card" style="margin-bottom: 0; padding: 22px; border-top: 4px solid var(--leave); height: 100%; transition: transform var(--transition-fast), box-shadow var(--transition-fast);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--leave-subtle); color: var(--leave); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+                <strong style="color: var(--text-headings); font-size: 1.05rem;">Correct Attendance</strong>
             </div>
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
-                Correct mistaken records with required audit reasons.
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0; line-height: 1.45;">
+                Correct mistaken records with mandatory audit justification reasons.
             </p>
         </div>
     </a>
 </div>
 
 <!-- Search & Filter Card -->
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-        <h2 style="margin: 0; font-size: 1.2rem; color: #0f172a;">Search &amp; Filter Attendance Logs</h2>
-        <span style="color: var(--text-muted); font-size: 0.85rem;">Bounded queries ensure high performance</span>
+<div class="card" style="padding: 24px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h2 class="card-title" style="font-size: 1.15rem;">Filter Attendance History</h2>
+            <p class="card-subtitle">Fast indexed queries with date range and department parameters</p>
+        </div>
+        <span class="badge" style="background: var(--bg-surface-subtle); color: var(--text-muted); border: 1px solid var(--border);">
+            High Performance Bounded Queries
+        </span>
     </div>
 
-    <form action="/attendance" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <form action="/attendance" method="GET" style="display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;">
         <input type="hidden" name="view" value="log">
-        <div style="flex: 1; min-width: 170px;">
-            <label for="employee" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Employee Code/Name:</label>
+        <div style="flex: 1.2; min-width: 200px;">
+            <label for="employee" class="form-label">Employee Code or Name:</label>
             <input list="employee_options" type="text" id="employee" name="employee" value="{{ employee }}" placeholder="e.g. E001 or Asha" style="width: 100%;">
             <datalist id="employee_options">
                 {% for emp in employees %}
@@ -87,8 +142,8 @@
                 {% endfor %}
             </datalist>
         </div>
-        <div style="flex: 1; min-width: 160px;">
-            <label for="department" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Department:</label>
+        <div style="flex: 1; min-width: 180px;">
+            <label for="department" class="form-label">Department:</label>
             <select id="department" name="department" style="width: 100%;">
                 <option value="">All Departments</option>
                 {% for dept in departments %}
@@ -96,8 +151,8 @@
                 {% endfor %}
             </select>
         </div>
-        <div style="flex: 1; min-width: 140px;">
-            <label for="status" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Status:</label>
+        <div style="flex: 1; min-width: 150px;">
+            <label for="status" class="form-label">Status:</label>
             <select id="status" name="status" style="width: 100%;">
                 <option value="">All Statuses</option>
                 <option value="Present" {% if status == 'Present' %}selected{% endif %}>Present</option>
@@ -106,30 +161,30 @@
                 <option value="Holiday" {% if status == 'Holiday' %}selected{% endif %}>Holiday</option>
             </select>
         </div>
-        <div style="flex: 1; min-width: 135px;">
-            <label for="start" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Start Date:</label>
+        <div style="flex: 1; min-width: 140px;">
+            <label for="start" class="form-label">Start Date:</label>
             <input type="date" id="start" name="start" value="{{ start }}" style="width: 100%;">
         </div>
-        <div style="flex: 1; min-width: 135px;">
-            <label for="end" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">End Date:</label>
+        <div style="flex: 1; min-width: 140px;">
+            <label for="end" class="form-label">End Date:</label>
             <input type="date" id="end" name="end" value="{{ end }}" style="width: 100%;">
         </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button type="submit" class="btn btn-primary">Filter Logs</button>
-            <a href="/attendance" class="btn btn-secondary">Clear</a>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary" style="height: 42px;">Filter Logs</button>
+            <a href="/attendance" class="btn btn-secondary" style="height: 42px;">Clear</a>
         </div>
     </form>
 </div>
 
 <!-- Results Area -->
 {% if has_searched %}
-<div class="card">
+<div class="card" style="padding: 0; overflow: hidden;">
     {% if records %}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-        <span style="font-size: 0.9rem; color: var(--text-muted);">
-            Showing <strong>{{ records|length }}</strong> of <strong>{{ total_records }}</strong> record(s) &bull; Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <span style="font-size: 0.9375rem; color: var(--text-muted);">
+            Showing <strong style="color: var(--text-headings);">{{ records|length }}</strong> of <strong style="color: var(--text-headings);">{{ total_records }}</strong> record(s) &bull; Page <strong style="color: var(--text-headings);">{{ page }}</strong> of <strong style="color: var(--text-headings);">{{ total_pages }}</strong>
         </span>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center;">
             {% if page > 1 %}
             <a href="/attendance?view=log&page={{ page - 1 }}&employee={{ employee }}&department={{ department }}&status={{ status }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">
                 &larr; Previous
@@ -143,33 +198,35 @@
         </div>
     </div>
 
-    <div style="overflow-x: auto;">
+    <div style="overflow-x: auto; width: 100%;">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 110px;">Date</th>
-                    <th style="width: 100px;">Code</th>
+                    <th style="width: 130px;">Date</th>
+                    <th style="width: 110px;">Code</th>
                     <th>Employee Name</th>
                     <th>Department</th>
-                    <th style="width: 110px; text-align: center;">Status</th>
+                    <th style="width: 120px; text-align: center;">Status</th>
                     <th style="width: 140px; text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for rec in records %}
                 <tr>
-                    <td style="color: var(--text-muted); font-size: 0.88rem;">{{ rec.attendance_date }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.9375rem; font-weight: 500;">{{ rec.attendance_date }}</td>
                     <td>
-                        <a href="/employees/{{ rec.employee_id }}/analytics" style="text-decoration: none; font-weight: 600; color: var(--primary);" title="View {{ rec.employee_name }} analytics">
-                            {{ rec.employee_code }}
+                        <a href="/employees/{{ rec.employee_id }}/analytics" style="text-decoration: none; font-weight: 700; color: var(--primary);" title="View {{ rec.employee_name }} analytics">
+                            <span style="background: var(--primary-subtle); padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); font-family: var(--font-mono); font-size: 0.8125rem;">
+                                {{ rec.employee_code }}
+                            </span>
                         </a>
                     </td>
                     <td>
-                        <a href="/employees/{{ rec.employee_id }}/analytics" style="text-decoration: none; color: #0f172a; font-weight: 500;" title="View analytics profile">
+                        <a href="/employees/{{ rec.employee_id }}/analytics" style="text-decoration: none; color: var(--text-headings); font-weight: 600;" title="View analytics profile">
                             {{ rec.employee_name }}
                         </a>
                     </td>
-                    <td style="color: var(--text-muted);">{{ rec.department }}</td>
+                    <td style="color: var(--text-muted); font-weight: 500;">{{ rec.department }}</td>
                     <td style="text-align: center;">
                         {% if rec.status == 'Present' %}
                         <span class="badge badge-present">Present</span>
@@ -178,13 +235,13 @@
                         {% elif rec.status == 'Leave' %}
                         <span class="badge badge-leave">Leave</span>
                         {% elif rec.status == 'Holiday' %}
-                        <span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">Holiday</span>
+                        <span class="badge badge-holiday">Holiday</span>
                         {% else %}
                         <span class="badge">{{ rec.status }}</span>
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
-                        <a href="/attendance/correct?employee_code={{ rec.employee_code }}&attendance_date={{ rec.attendance_date }}" class="btn-action" style="font-size: 0.8rem; padding: 0.2rem 0.5rem;">
+                        <a href="/attendance/correct?employee_code={{ rec.employee_code }}&attendance_date={{ rec.attendance_date }}" class="btn-action">
                             Correct
                         </a>
                     </td>
@@ -196,9 +253,9 @@
 
     <!-- Bottom Pagination -->
     {% if total_pages > 1 %}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem;">
-        <span style="font-size: 0.85rem; color: var(--text-muted);">Page {{ page }} of {{ total_pages }} ({{ total_records }} total records)</span>
-        <div style="display: flex; gap: 0.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 12px; background: #fafcff;">
+        <span style="font-size: 0.875rem; color: var(--text-muted);">Page {{ page }} of {{ total_pages }} ({{ total_records }} total records)</span>
+        <div style="display: flex; gap: 8px;">
             {% if page > 1 %}
             <a href="/attendance?view=log&page={{ page - 1 }}&employee={{ employee }}&department={{ department }}&status={{ status }}&start={{ start }}&end={{ end }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
             {% endif %}
@@ -210,27 +267,37 @@
     {% endif %}
 
     {% else %}
-    <div style="text-align: center; padding: 3rem 1rem;">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
-        <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 0.35rem;">No records found.</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
-            No attendance records match your filter criteria. Try adjusting dates or department.
-        </p>
+    <div class="empty-state" style="padding: 48px 24px;">
+        <div class="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        </div>
+        <div class="empty-state-title">No records found.</div>
+        <p class="empty-state-text">No attendance records match your filter criteria. Try adjusting date boundaries or department filters.</p>
     </div>
     {% endif %}
 </div>
 {% else %}
-<!-- On-Demand Landing State -->
-<div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: #f8fafc; border: 1px dashed var(--border);">
-    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
-    <h3 style="font-size: 1.25rem; color: #0f172a; margin-bottom: 0.5rem;">Attendance History Loads On Demand</h3>
-    <p style="color: var(--text-muted); max-width: 520px; margin: 0 auto 1.5rem auto; font-size: 0.95rem;">
-        To ensure optimal responsiveness, attendance records are not loaded automatically. Apply filters above or open the complete log with one click.
+<!-- On-Demand Landing State (Full Width Inviting Card) -->
+<div class="card" style="text-align: center; padding: 64px 32px; background: #fafcff; border: 1px dashed var(--border-input);">
+    <div style="width: 64px; height: 64px; border-radius: var(--radius-pill); background: var(--primary-subtle); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+    </div>
+    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-headings); margin-bottom: 8px;">Attendance History Loads On Demand</h3>
+    <p style="color: var(--text-muted); max-width: 540px; margin: 0 auto 24px auto; font-size: 0.9375rem; line-height: 1.55;">
+        To ensure lightning-fast dashboard responsiveness, historical attendance records are indexed on demand. Apply a filter above or view the complete log immediately.
     </p>
-    <a href="/attendance?view=log" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.95rem;">
-        View Attendance Log &rarr;
+    <a href="/attendance?view=log" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+        View Complete Attendance Log &rarr;
     </a>
 </div>
 {% endif %}
 {% endblock %}
-

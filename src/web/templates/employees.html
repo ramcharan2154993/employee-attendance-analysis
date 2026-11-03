@@ -1,62 +1,125 @@
 {% extends "base.html" %}
+{% from "_components.html" import avatar_circle %}
 
 {% block title %}Employees · {{ APP_NAME }}{% endblock %}
 {% block page_title %}Employees{% endblock %}
 
 {% block content %}
-<div class="actions-bar">
-    <a href="/employees/new" class="btn btn-primary">+ Add Employee</a>
+<!-- Top Header & Primary Action -->
+<div class="page-header">
+    <div class="page-header-text">
+        <h1 class="page-header-title">Staff Directory</h1>
+        <p class="page-header-subtitle">Manage company employees, status, departments, and attendance records</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="/employees/new" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add New Employee
+        </a>
+    </div>
 </div>
 
-<div class="card">
-    <h1 style="margin-bottom: 1.25rem;">Employees</h1>
-    <form action="/employees" method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 220px;">
-            <label for="q" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Search Staff:</label>
-            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Search by code, name, or department..." style="width: 100%;">
+<!-- Search & Filters Bar (Full Width Card) -->
+<div class="card" style="padding: 20px 24px; margin-bottom: 24px;">
+    <form action="/employees" method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px;">
+            <label for="q" class="form-label">Search Employees</label>
+            <div style="position: relative;">
+                <input type="text" id="q" name="q" value="{{ q }}"
+                    placeholder="Search by name, employee code (e.g. E001), or department..."
+                    style="width: 100%; padding-left: 38px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="position: absolute; left: 12px; top: 12px; color: var(--text-dim); pointer-events: none;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
         </div>
-        <div style="padding-top: 1.4rem;">
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-weight: 500;">
-                <input type="checkbox" name="include_inactive" value="1"{% if include_inactive %} checked{% endif %}>
-                Include inactive
+        <div style="display: flex; align-items: center; height: 42px;">
+            <label
+                style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9375rem; color: var(--text-headings); user-select: none;">
+                <input type="checkbox" name="include_inactive" value="1" {% if include_inactive %} checked{% endif %}
+                    style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                Include inactive staff
             </label>
         </div>
-        <div style="padding-top: 1.4rem; display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="/employees" class="btn btn-secondary">Clear</a>
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 20px;">
+                Filter
+            </button>
+            <a href="/employees" class="btn btn-secondary" style="height: 42px; padding: 0 16px;">
+                Clear
+            </a>
         </div>
     </form>
 </div>
 
-<div class="card">
-    <div style="overflow-x: auto;">
+<!-- Employees Table Card -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div
+        style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h2 class="card-title" style="font-size: 1.125rem;">Directory Roster</h2>
+            <p class="card-subtitle">Showing {{ employees|length }} staff member{% if employees|length != 1 %}s{% endif
+                %}</p>
+        </div>
+        {% if q %}
+        <span class="badge"
+            style="background: var(--primary-subtle); color: var(--primary); border: 1px solid var(--primary-border);">
+            Filtered by: "{{ q }}"
+        </span>
+        {% endif %}
+    </div>
+
+    <div style="overflow-x: auto; width: 100%;">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 110px;">Code</th>
+                    <th style="width: 120px;">Code</th>
                     <th>Employee Name</th>
                     <th>Department</th>
-                    <th style="width: 140px;">Joining Date</th>
-                    <th style="width: 110px;">Status</th>
-                    <th style="width: 160px; text-align: center;">Actions</th>
+                    <th style="width: 150px;">Joining Date</th>
+                    <th style="width: 120px; text-align: center;">Status</th>
+                    <th style="width: 220px; text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for emp in employees %}
                 <tr>
                     <td>
-                        <a href="/employees/{{ emp.employee_id }}/analytics" style="text-decoration: none; font-weight: 600; color: var(--primary);" title="View analytics">
-                            {{ emp.employee_code }}
+                        <a href="/employees/{{ emp.employee_id }}/analytics"
+                            style="text-decoration: none; font-weight: 700; color: var(--primary);"
+                            title="View analytics">
+                            <span
+                                style="background: var(--primary-subtle); padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); font-family: var(--font-mono); font-size: 0.84375rem;">
+                                {{ emp.employee_code }}
+                            </span>
                         </a>
                     </td>
                     <td>
-                        <a href="/employees/{{ emp.employee_id }}/analytics" style="text-decoration: none; color: #0f172a; font-weight: 500;" title="View analytics profile">
-                            {{ emp.employee_name }}
-                        </a>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {{ avatar_circle(emp.employee_name, 'md') }}
+                            <div>
+                                <a href="/employees/{{ emp.employee_id }}/analytics"
+                                    style="text-decoration: none; color: var(--text-headings); font-weight: 600;"
+                                    title="View analytics profile">
+                                    {{ emp.employee_name }}
+                                </a>
+                            </div>
+                        </div>
                     </td>
-                    <td style="color: var(--text-muted);">{{ emp.department }}</td>
-                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ emp.joining_date }}</td>
                     <td>
+                        <span style="color: var(--text-body); font-weight: 500;">{{ emp.department }}</span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.875rem;">
+                        {{ emp.joining_date }}
+                    </td>
+                    <td style="text-align: center;">
                         {% if emp.is_active %}
                         <span class="badge-active">Active</span>
                         {% else %}
@@ -64,18 +127,46 @@
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
-                        <a href="/employees/{{ emp.employee_id }}/analytics" class="btn-action" style="margin-right: 0.35rem; color: #4f46e5; border-color: #c7d2fe;">Analytics</a>
-                        {% if emp.is_active %}
-                        <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action" style="margin-right: 0.35rem;">Edit</a>
-                        <a href="/employees/{{ emp.employee_code }}/deactivate" class="btn-action" style="color: var(--danger); border-color: rgba(244, 63, 94, 0.3);">Deactivate</a>
-                        {% else %}
-                        <span style="color: var(--text-dim); font-size: 0.85rem;">None</span>
-                        {% endif %}
+                        <div style="display: inline-flex; gap: 6px;">
+                            <a href="/employees/{{ emp.employee_id }}/analytics" class="btn-action"
+                                style="color: var(--primary); border-color: var(--primary-border);"
+                                title="View Analytics">
+                                Analytics
+                            </a>
+                            {% if emp.is_active %}
+                            <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action"
+                                title="Edit Employee Details">
+                                Edit
+                            </a>
+                            <a href="/employees/{{ emp.employee_code }}/deactivate" class="btn-action"
+                                style="color: var(--absent); border-color: var(--absent-border);"
+                                title="Deactivate Employee">
+                                Deactivate
+                            </a>
+                            {% else %}
+                            <span
+                                style="color: var(--text-dim); font-size: 0.8125rem; padding: 4px 8px;">Deactivated</span>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No employees found.</td>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </div>
+                            <div class="empty-state-title">No employees found</div>
+                            <p class="empty-state-text">No staff records match your search criteria. Try modifying your
+                                filters or add a new team member.</p>
+                            <a href="/employees/new" class="btn btn-primary btn-sm">+ Add New Employee</a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

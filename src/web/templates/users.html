@@ -5,87 +5,108 @@
 
 {% block content %}
 <div class="actions-bar">
-    <a href="/" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    <a href="/" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Dashboard
+    </a>
     <a href="/audit" class="btn btn-secondary btn-sm">View Audit Trail</a>
 </div>
 
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+<div class="card" style="padding: 28px 32px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
         <div>
-            <h1 style="font-size: 1.4rem; color: #0f172a; margin: 0 0 0.25rem 0;">User Accounts</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-headings); margin: 0 0 4px 0;">
+                User Accounts
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.9375rem; margin: 0;">
                 System User Accounts &bull; Role-based access control. Authorized accounts can access HR workflows and administration.
             </p>
         </div>
-        <span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.85rem; padding: 4px 10px;">
-            Admin Only Access
+        <span class="badge" style="background: var(--admin-purple-subtle); color: var(--admin-purple-text); border: 1px solid var(--admin-purple-border); font-size: 0.8125rem; padding: 6px 14px;">
+            🛡️ Admin Only Access
         </span>
     </div>
 
     {% if error %}
-    <div class="alert alert-danger" style="margin-bottom: 1.25rem;">
-        {{ error }}
+    <div class="alert alert-danger" style="margin-bottom: 20px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
     </div>
     {% endif %}
 
-    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.75rem;">
-        <h3 style="font-size: 1.05rem; margin-top: 0; margin-bottom: 0.75rem; color: #1e293b;">
-            + Provision New User Account
+    <!-- Provision New User Form Card -->
+    <div style="background: #fafcff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-top: 0; margin-bottom: 14px; color: var(--text-headings); display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Provision New User Account
         </h3>
-        <form action="/users/new" method="POST" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <form action="/users/new" method="POST" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div style="flex: 1; min-width: 170px;">
-                <label for="new_username" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Username:</label>
+            <div style="flex: 1.2; min-width: 180px;">
+                <label for="new_username" class="form-label">Username:</label>
                 <input type="text" id="new_username" name="username" required placeholder="e.g. hr_manager" style="width: 100%;">
             </div>
 
-            <div style="flex: 1; min-width: 170px;">
-                <label for="new_password" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Password (min 6 chars):</label>
+            <div style="flex: 1.2; min-width: 180px;">
+                <label for="new_password" class="form-label">Password (min 6 chars):</label>
                 <input type="password" id="new_password" name="password" required minlength="6" placeholder="Enter secure password" style="width: 100%;">
             </div>
 
-            <div style="flex: 1; min-width: 130px;">
-                <label for="new_role" style="display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.35rem;">Role:</label>
+            <div style="flex: 1; min-width: 140px;">
+                <label for="new_role" class="form-label">Role Assignment:</label>
                 <select id="new_role" name="role" style="width: 100%;">
-                    <option value="HR" selected>HR</option>
-                    <option value="Admin">Admin</option>
+                    <option value="HR" selected>HR Operator</option>
+                    <option value="Admin">System Administrator</option>
                 </select>
             </div>
 
             <div>
-                <button type="submit" class="btn btn-primary">Create User</button>
+                <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 22px;">
+                    Create Account
+                </button>
             </div>
         </form>
     </div>
 
-    <div style="overflow-x: auto;">
+    <!-- Users Table -->
+    <div style="overflow-x: auto; width: 100%; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 60px;">ID</th>
+                    <th style="width: 70px;">ID</th>
                     <th>Username</th>
-                    <th style="width: 120px; text-align: center;">Role</th>
-                    <th style="width: 120px; text-align: center;">Account Status</th>
+                    <th style="width: 140px; text-align: center;">Role</th>
+                    <th style="width: 140px; text-align: center;">Account Status</th>
                     <th style="width: 180px;">Created Date</th>
-                    <th style="width: 140px; text-align: center;">Action</th>
+                    <th style="width: 150px; text-align: center;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in users %}
                 <tr>
-                    <td style="color: var(--text-dim);">#{{ u.user_id }}</td>
+                    <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.84375rem;">#{{ u.user_id }}</td>
                     <td>
-                        <strong style="color: #0f172a;">{{ u.username }}</strong>
+                        <strong style="color: var(--text-headings); font-size: 0.9375rem;">{{ u.username }}</strong>
                         {% if current_user and current_user.user_id == u.user_id %}
-                        <span style="font-size: 0.75rem; color: var(--primary); margin-left: 0.35rem;">(You)</span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--primary-subtle); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: 6px;">You</span>
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
                         {% if u.role == 'Admin' %}
-                        <span class="badge" style="background: #fdf4ff; color: #a855f7; border: 1px solid #f0abfc;">Admin</span>
+                        <span class="badge" style="background: var(--admin-purple-subtle); color: var(--admin-purple-text); border: 1px solid var(--admin-purple-border); font-weight: 700;">Admin</span>
                         {% else %}
-                        <span class="badge" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">HR</span>
+                        <span class="badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-weight: 700;">HR</span>
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
@@ -95,16 +116,16 @@
                         <span class="badge badge-absent">Inactive</span>
                         {% endif %}
                     </td>
-                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ u.created_at }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.875rem;">{{ u.created_at }}</td>
                     <td style="text-align: center;">
                         <form action="/users/{{ u.user_id }}/toggle" method="POST" style="display: inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             {% if u.is_active %}
-                            <button type="submit" class="btn-action" style="color: #dc2626; border-color: #fca5a5; font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                            <button type="submit" class="btn-action" style="color: var(--absent); border-color: var(--absent-border);">
                                 Deactivate
                             </button>
                             {% else %}
-                            <button type="submit" class="btn-action" style="color: #16a34a; border-color: #86efac; font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                            <button type="submit" class="btn-action" style="color: var(--present); border-color: var(--present-border);">
                                 Activate
                             </button>
                             {% endif %}

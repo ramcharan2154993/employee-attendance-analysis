@@ -5,33 +5,60 @@
 
 {% block content %}
 <div class="actions-bar">
-    <a href="/employees" class="btn btn-secondary btn-sm">&larr; Back to Employees</a>
+    <a href="/employees" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Employee Directory
+    </a>
 </div>
 
-<div class="card" style="max-width: 520px; margin: 0 auto;">
-    <h1 style="font-size: 1.4rem; margin-bottom: 1.25rem;">{{ title }}</h1>
+<div class="card" style="max-width: 600px; margin: 0 auto; padding: 36px 32px;">
+    <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-headings); margin-bottom: 6px;">{{ title }}</h1>
+        <p style="color: var(--text-muted); font-size: 0.9375rem;">
+            {% if is_edit %}
+            Update profile information and department assignments.
+            {% else %}
+            Provision a new employee record into the attendance system.
+            {% endif %}
+        </p>
+    </div>
+
     {% if error %}
-    <div class="alert alert-danger">
-        {{ error }}
+    <div class="alert alert-danger" style="margin-bottom: 20px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ error }}</span>
     </div>
     {% endif %}
-    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 1.15rem;">
+
+    <form action="{{ form_action }}" method="post" style="display: flex; flex-direction: column; gap: 20px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div>
-            <label for="employee_code" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Employee Code:</label>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="employee_code" class="form-label">Employee Code</label>
             {% if is_edit %}
-            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" readonly style="width: 100%; opacity: 0.7; cursor: not-allowed;">
+            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" readonly style="background-color: var(--bg-surface-subtle); cursor: not-allowed; opacity: 0.8; font-family: var(--font-mono);">
+            <small>Employee code cannot be changed once provisioned.</small>
             {% else %}
-            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" placeholder="e.g. E001" required style="width: 100%;">
+            <input type="text" id="employee_code" name="employee_code" value="{{ code }}" placeholder="e.g. E001" required style="font-family: var(--font-mono);">
+            <small>Unique identifier for this employee across attendance rosters.</small>
             {% endif %}
         </div>
-        <div>
-            <label for="employee_name" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Employee Name:</label>
-            <input type="text" id="employee_name" name="employee_name" value="{{ name }}" placeholder="Full Name" required style="width: 100%;">
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="employee_name" class="form-label">Full Name</label>
+            <input type="text" id="employee_name" name="employee_name" value="{{ name }}" placeholder="e.g. Asha Sharma" required>
         </div>
-        <div>
-            <label for="department" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Department:</label>
-            <input type="text" id="department" name="department" list="department_options" value="{{ department }}" placeholder="e.g. Engineering" required style="width: 100%;">
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="department" class="form-label">Department</label>
+            <input type="text" id="department" name="department" list="department_options" value="{{ department }}" placeholder="Select or type department..." required>
             <datalist id="department_options">
                 <option value="Engineering">
                 <option value="Marketing">
@@ -40,17 +67,22 @@
                 <option value="Operations">
                 <option value="Sales">
             </datalist>
+            <small>Choose an existing organizational unit or enter a new one.</small>
         </div>
-        <div>
-            <label for="joining_date" style="display: block; margin-bottom: 0.35rem; font-weight: 500;">Joining Date:</label>
-            <input type="date" id="joining_date" name="joining_date" value="{{ joining_date }}" style="width: 100%;">
-            <small style="color: var(--text-dim); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                Leave blank to default to today's date.
-            </small>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="joining_date" class="form-label">Joining Date</label>
+            <input type="date" id="joining_date" name="joining_date" value="{{ joining_date }}">
+            <small>Attendance eligibility starts on or after this date. Leave blank to default to today.</small>
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.75rem;">
-            <button type="submit" class="btn btn-primary">Save Employee</button>
-            <a href="/employees" class="btn btn-secondary">Cancel</a>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                Save Employee
+            </button>
+            <a href="/employees" class="btn btn-secondary" style="padding: 10px 20px;">
+                Cancel
+            </a>
         </div>
     </form>
 </div>

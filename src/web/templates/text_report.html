@@ -5,12 +5,24 @@
 
 {% block content %}
 <!-- Top Subnav Actions Bar -->
-<div class="actions-bar" style="margin-bottom: 1.25rem;">
-    <a href="/summary/employees" class="btn {% if request.path == '/summary/employees' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Employee Summary</a>
-    <a href="/summary/departments" class="btn {% if request.path == '/summary/departments' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Department Summary</a>
-    <a href="/ranking" class="btn {% if request.path == '/ranking' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Absenteeism Ranking</a>
-    <a href="/report?year=2026&month=9" class="btn {% if request.path.startswith('/report') %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Monthly Report</a>
-    <a href="/charts?year=2026&month=9" class="btn {% if request.path.startswith('/charts') %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Charts</a>
+<div class="actions-bar" style="margin-bottom: 1.5rem; justify-content: space-between;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="/summary/employees" class="btn {% if request.path == '/summary/employees' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Employee Summary</a>
+        <a href="/summary/departments" class="btn {% if request.path == '/summary/departments' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Department Summary</a>
+        <a href="/ranking" class="btn {% if request.path == '/ranking' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Absenteeism Ranking</a>
+        <a href="/report?year=2026&month=9" class="btn {% if request.path.startswith('/report') %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Monthly Report</a>
+        <a href="/charts?year=2026&month=9" class="btn {% if request.path.startswith('/charts') %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Charts</a>
+    </div>
+    <div>
+        <button onclick="window.print()" class="btn btn-secondary btn-sm" title="Print or save as PDF" style="cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Export / Print PDF
+        </button>
+    </div>
 </div>
 
 {% if request.path.startswith('/report') %}

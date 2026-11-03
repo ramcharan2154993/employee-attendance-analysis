@@ -4,28 +4,29 @@
 {% block page_title %}Reports{% endblock %}
 
 {% block content %}
-<div class="actions-bar" style="margin-bottom: 1.25rem;">
+<!-- Subnav Actions Bar -->
+<div class="actions-bar">
     <a href="/summary/employees" class="btn btn-secondary btn-sm">Employee Summary</a>
     <a href="/summary/departments" class="btn btn-secondary btn-sm">Department Summary</a>
     <a href="/ranking" class="btn btn-secondary btn-sm">Absenteeism Ranking</a>
     <a href="/report?year={{ year }}&month={{ month }}" class="btn btn-secondary btn-sm">Monthly Report</a>
-    <a href="/charts?year={{ year }}&month={{ month }}" class="btn btn-primary btn-sm">Charts</a>
+    <a href="/charts?year={{ year }}&month={{ month }}" class="btn btn-primary btn-sm">Visual Charts</a>
 </div>
 
 <!-- Period Selector Toolbar -->
-<div class="rpt-card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
-    <form action="/charts" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-        <div>
-            <label for="chart_year" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Year:</label>
-            <select id="chart_year" name="year" style="width: 130px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input); font-weight: 500;">
+<div class="card" style="padding: 20px 24px; margin-bottom: 24px;">
+    <form action="/charts" method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="min-width: 140px;">
+            <label for="chart_year" class="form-label">Year:</label>
+            <select id="chart_year" name="year" style="width: 100%;">
                 {% for y in available_years %}
                 <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div>
-            <label for="chart_month" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Month:</label>
-            <select id="chart_month" name="month" style="width: 150px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input); font-weight: 500;">
+        <div style="min-width: 180px;">
+            <label for="chart_month" class="form-label">Month:</label>
+            <select id="chart_month" name="month" style="width: 100%;">
                 {% set month_names = [
                     (1, "January"), (2, "February"), (3, "March"), (4, "April"),
                     (5, "May"), (6, "June"), (7, "July"), (8, "August"),
@@ -36,18 +37,20 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 18px;">View Charts</button>
+        <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 24px;">
+            Update Charts &rarr;
+        </button>
     </form>
 </div>
 
 <!-- Header Card -->
-<div class="rpt-card" style="margin-bottom: 1.25rem;">
-    <div class="rpt-card-header" style="margin-bottom: 0;">
-        <div>
-            <h1 class="rpt-card-title">Visual Analytics ({{ "%04d-%02d"|format(year, month) }})</h1>
-            <p class="rpt-card-subtitle">Modern high-resolution attendance trends and employee absenteeism rankings.</p>
-        </div>
-    </div>
+<div class="card" style="padding: 24px; margin-bottom: 24px;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-headings); margin: 0 0 6px 0;">
+        Visual Analytics Suite ({{ "%04d-%02d"|format(year, month) }})
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.9375rem; margin: 0;">
+        High-resolution graphical telemetry detailing organizational attendance distributions and absenteeism rankings.
+    </p>
 </div>
 
 <!-- KPI Cards -->
@@ -57,36 +60,44 @@
             <span class="rpt-kpi-label">Active Period</span>
             <span class="rpt-kpi-chip" style="background: var(--primary-subtle); color: var(--primary);">Filtered</span>
         </div>
-        <div class="rpt-kpi-value" style="font-size: 1.5rem;">{{ "%04d-%02d"|format(year, month) }}</div>
+        <div class="rpt-kpi-value">{{ "%04d-%02d"|format(year, month) }}</div>
     </div>
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
             <span class="rpt-kpi-label">Ranking Metric</span>
-            <span class="rpt-kpi-chip" style="background: #fef2f2; color: #ef4444;">Absenteeism</span>
+            <span class="rpt-kpi-chip" style="background: var(--absent-subtle); color: var(--absent);">Absenteeism</span>
         </div>
-        <div class="rpt-kpi-value" style="font-size: 1.5rem;">Employee %</div>
+        <div class="rpt-kpi-value">Employee %</div>
     </div>
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
             <span class="rpt-kpi-label">Trend Scope</span>
-            <span class="rpt-kpi-chip" style="background: #f0fdf4; color: #16a34a;">Historical</span>
+            <span class="rpt-kpi-chip" style="background: var(--present-subtle); color: var(--present);">Historical</span>
         </div>
-        <div class="rpt-kpi-value" style="font-size: 1.5rem;">All Months</div>
+        <div class="rpt-kpi-value">All Months</div>
     </div>
 </div>
 
-<!-- Two Cards in a Grid -->
+<!-- Two High-Res Visualizations in Responsive Grid -->
 <div class="rpt-charts-grid">
     <div class="rpt-chart-card">
-        <h2 class="rpt-card-title">Absenteeism Ranking</h2>
-        <p class="rpt-card-subtitle">Individual employee absenteeism percentages for {{ "%04d-%02d"|format(year, month) }} with tiered colour coding.</p>
-        <img src="/charts/file/{{ chart1 }}" alt="Absenteeism Ranking Chart" class="rpt-chart-img">
+        <div style="margin-bottom: 16px;">
+            <h2 class="rpt-card-title">Absenteeism Ranking Breakdown</h2>
+            <p class="rpt-card-subtitle">Employee absenteeism percentages for {{ "%04d-%02d"|format(year, month) }} with tiered color benchmarks.</p>
+        </div>
+        <div style="background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center;">
+            <img src="/charts/file/{{ chart1 }}" alt="Absenteeism Ranking Chart" class="rpt-chart-img" style="border: none; box-shadow: none;">
+        </div>
     </div>
 
     <div class="rpt-chart-card">
-        <h2 class="rpt-card-title">Monthly Attendance Trends</h2>
-        <p class="rpt-card-subtitle">Historical company-wide monthly attendance percentage across all recorded periods.</p>
-        <img src="/charts/file/{{ chart2 }}" alt="Monthly Attendance Trends Chart" class="rpt-chart-img">
+        <div style="margin-bottom: 16px;">
+            <h2 class="rpt-card-title">Company-Wide Attendance Trajectory</h2>
+            <p class="rpt-card-subtitle">Historical monthly attendance percentage across all recorded organizational cycles.</p>
+        </div>
+        <div style="background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center;">
+            <img src="/charts/file/{{ chart2 }}" alt="Monthly Attendance Trends Chart" class="rpt-chart-img" style="border: none; box-shadow: none;">
+        </div>
     </div>
 </div>
 {% endblock %}

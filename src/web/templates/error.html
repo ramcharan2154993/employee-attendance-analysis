@@ -4,9 +4,22 @@
 {% block page_title %}Error{% endblock %}
 
 {% block content %}
-<div class="card" style="border-color: var(--danger);">
-    <h1 style="color: var(--danger);">Error</h1>
-    <p>{{ message }}</p>
-    <p><a href="/" style="color: var(--primary);">Return to Dashboard</a></p>
+<div class="card" style="max-width: 580px; margin: 40px auto; padding: 48px 36px; text-align: center; border: 1px solid var(--absent-border); box-shadow: var(--shadow-card);">
+    <div style="width: 56px; height: 56px; border-radius: var(--radius-pill); background: var(--absent-subtle); color: var(--absent); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+    </div>
+    <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--absent-text); margin-bottom: 12px;">Error</h1>
+    <p style="color: var(--text-body); font-size: 1rem; line-height: 1.6; margin-bottom: 28px;">
+        {{ message }}
+    </p>
+    <div>
+        <a href="/" class="btn btn-primary" style="padding: 10px 24px;">
+            &larr; Return to Dashboard
+        </a>
+    </div>
 </div>
 {% endblock %}

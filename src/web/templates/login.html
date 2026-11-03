@@ -5,62 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in · {{ APP_NAME }}</title>
     <meta name="description" content="{{ APP_NAME }} · {{ APP_TAGLINE }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="login-body">
-    <div class="login-wrapper">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">
-                    <svg class="app-logo-mark" width="44" height="44" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <defs>
-                            <linearGradient id="loginLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#2563eb" />
-                                <stop offset="100%" stop-color="#3b82f6" />
-                            </linearGradient>
-                        </defs>
-                        <rect width="34" height="34" rx="10" fill="url(#loginLogoGrad)" />
-                        <path d="M10 17.5L15 22.5L24 12.5" stroke="#ffffff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </div>
-                <h1 class="login-title">Sign in to {{ APP_NAME }}</h1>
-                <p class="login-subtitle">{{ APP_TAGLINE }}</p>
-            </div>
-
-            {% if error %}
-            <div class="alert alert-danger login-error" role="alert">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    <div class="login-split-layout">
+        <!-- Left Brand Pane (Gradient + Value Proposition) -->
+        <div class="login-hero-pane">
+            <div class="login-hero-header">
+                <svg class="app-logo-mark" width="44" height="44" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="splitLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="100%" stop-color="#c7d2fe" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="34" height="34" rx="10" fill="url(#splitLogoGrad)" />
+                    <path d="M10 17.5L15 22.5L24 12.5" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <span>{{ error }}</span>
+                <span class="login-hero-title">{{ APP_NAME }}</span>
             </div>
-            {% endif %}
 
-            <form action="/login" method="POST" class="login-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="next" value="{{ next }}">
+            <div class="login-hero-content">
+                <h1 class="login-hero-headline">Attendance intelligence for modern high-performance teams</h1>
+                <p class="login-hero-description">
+                    Track, analyze, and manage workforce attendance, department absenteeism trends, and compliance with immutable enterprise audit logs.
+                </p>
 
-                <div class="form-group">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" id="username" name="username" value="{{ username or '' }}" required autofocus autocomplete="username" placeholder="Enter your username">
+                <div class="login-hero-features">
+                    <div class="login-feature-item">
+                        <div class="login-feature-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span>Real-time attendance calculations &amp; company KPI dashboards</span>
+                    </div>
+                    <div class="login-feature-item">
+                        <div class="login-feature-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span>Department-level batch recording with duplicate prevention</span>
+                    </div>
+                    <div class="login-feature-item">
+                        <div class="login-feature-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <span>Append-only audit trail logging for administrative corrections</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-hero-footer">
+                &copy; {{ APP_NAME }} Enterprise Platform &bull; All rights reserved.
+            </div>
+        </div>
+
+        <!-- Right Login Card Pane -->
+        <div class="login-form-pane">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2 class="login-title">Sign in</h2>
+                    <p class="login-subtitle">Enter your credentials to access your organization's portal</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                {% if error %}
+                <div class="alert alert-danger login-error" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>{{ error }}</span>
                 </div>
+                {% endif %}
 
-                <div class="form-group" style="margin-top: 8px;">
-                    <button type="submit" class="btn btn-primary login-btn">
-                        Sign In
-                    </button>
+                <form action="/login" method="POST" class="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <div class="form-group">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" id="username" name="username" value="{{ username or '' }}" required autofocus autocomplete="username" placeholder="Enter username (e.g. admin)">
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+                        </div>
+                        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter password">
+                    </div>
+
+                    <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+                        <button type="submit" class="btn btn-primary login-btn">
+                            Sign In &rarr;
+                        </button>
+                    </div>
+                </form>
+
+                <div class="login-footer">
+                    <span>Restricted access &bull; Authorized personnel &amp; HR administrators only</span>
                 </div>
-            </form>
-
-            <div class="login-footer">
-                <span>Restricted access &bull; Authorized personnel only</span>
             </div>
         </div>
     </div>

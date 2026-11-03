@@ -8,14 +8,16 @@
 <!-- Top Action Bar -->
 <div class="actions-bar">
     <a href="/employees" class="btn btn-secondary btn-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
         Back to Directory
     </a>
     <a href="/attendance?view=log&employee={{ data.employee.employee_code }}" class="btn btn-secondary btn-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -24,7 +26,8 @@
         View Attendance Logs
     </a>
     <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}" class="btn btn-secondary btn-sm">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
@@ -39,8 +42,10 @@
             {{ avatar_circle(data.employee.employee_name, 'lg') }}
             <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                    <h1 style="margin: 0; font-size: 1.625rem; font-weight: 800; color: var(--text-headings);">{{ data.employee.employee_name }}</h1>
-                    <span style="background: var(--primary-subtle); color: var(--primary); border: 1px solid var(--primary-border); font-family: var(--font-mono); font-weight: 700; font-size: 0.8125rem; padding: 3px 10px; border-radius: var(--radius-sm);">
+                    <h1 style="margin: 0; font-size: 1.625rem; font-weight: 800; color: var(--text-headings);">{{
+                        data.employee.employee_name }}</h1>
+                    <span
+                        style="background: var(--primary-subtle); color: var(--primary); border: 1px solid var(--primary-border); font-family: var(--font-mono); font-weight: 700; font-size: 0.8125rem; padding: 3px 10px; border-radius: var(--radius-sm);">
                         {{ data.employee.employee_code }}
                     </span>
                     {% if data.employee.is_active %}
@@ -54,18 +59,22 @@
                     <span>&bull;</span>
                     <span><strong>Joined:</strong> {{ data.employee.joining_date }}</span>
                     <span>&bull;</span>
-                    <span><strong>Scope:</strong> <strong style="color: var(--primary);">{{ data.reporting_period }}</strong></span>
+                    <span><strong>Scope:</strong> <strong style="color: var(--primary);">{{ data.reporting_period
+                            }}</strong></span>
                 </div>
             </div>
         </div>
 
         <!-- Period Selector Filter Form -->
-        <form action="/employees/{{ data.employee.employee_id }}/analytics" method="GET" style="display: flex; gap: 10px; align-items: center; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; box-shadow: var(--shadow-xs);">
-            <label for="month_filter" style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0;">Period:</label>
-            <select id="month_filter" name="filter_period" style="font-size: 0.875rem; height: 36px; padding: 4px 12px;" onchange="this.form.submit()">
-                <option value="all" {% if data.selected_period == 'all' %}selected{% endif %}>All Time History</option>
+        <form action="/employees/{{ data.employee.employee_id }}/analytics" method="GET"
+            style="display: flex; gap: 10px; align-items: center; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; box-shadow: var(--shadow-xs);">
+            <label for="month_filter"
+                style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0;">Period:</label>
+            <select id="month_filter" name="filter_period" style="font-size: 0.875rem; height: 36px; padding: 4px 12px;"
+                onchange="this.form.submit()">
+                <option value="all" {% if data.selected_period=='all' %}selected{% endif %}>All Time History</option>
                 {% for ym, label in data.available_months %}
-                <option value="{{ ym }}" {% if data.selected_period == ym %}selected{% endif %}>
+                <option value="{{ ym }}" {% if data.selected_period==ym %}selected{% endif %}>
                     {{ label }}
                 </option>
                 {% endfor %}
@@ -105,21 +114,23 @@
         <div class="stat-title">Attendance Rate</div>
         <div class="stat-value" style="color: var(--present);">
             {% if data.kpis.attendance_pct is not none %}
-                {{ "%.2f"|format(data.kpis.attendance_pct) }}%
+            {{ "%.2f"|format(data.kpis.attendance_pct) }}%
             {% else %}
-                N/A
+            N/A
             {% endif %}
         </div>
         <small>Present / Eligible &times; 100</small>
     </div>
 
-    <div class="stat-card" style="border-top: 3px solid {% if data.kpis.absenteeism_pct and data.kpis.absenteeism_pct > 15 %}var(--absent){% else %}var(--text-muted){% endif %};">
+    <div class="stat-card"
+        style="border-top: 3px solid {% if data.kpis.absenteeism_pct and data.kpis.absenteeism_pct > 15 %}var(--absent){% else %}var(--text-muted){% endif %};">
         <div class="stat-title">Absenteeism Rate</div>
-        <div class="stat-value" style="color: {% if data.kpis.absenteeism_pct and data.kpis.absenteeism_pct > 15 %}var(--absent){% else %}var(--text-headings){% endif %};">
+        <div class="stat-value"
+            style="color: {% if data.kpis.absenteeism_pct and data.kpis.absenteeism_pct > 15 %}var(--absent){% else %}var(--text-headings){% endif %};">
             {% if data.kpis.absenteeism_pct is not none %}
-                {{ "%.2f"|format(data.kpis.absenteeism_pct) }}%
+            {{ "%.2f"|format(data.kpis.absenteeism_pct) }}%
             {% else %}
-                N/A
+            N/A
             {% endif %}
         </div>
         <small>Absent / Eligible &times; 100</small>
@@ -132,46 +143,62 @@
         Department Benchmark: {{ data.department_comparison.department }}
     </h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-        <div style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-            <span style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept Attendance Rate:</span>
+        <div
+            style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <span
+                style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept
+                Attendance Rate:</span>
             <strong style="color: var(--present); font-size: 1.25rem;">
                 {% if data.department_comparison.attendance_pct is not none %}
-                    {{ "%.2f"|format(data.department_comparison.attendance_pct) }}%
-                </strong>
-                {% if data.kpis.attendance_pct is not none %}
-                    {% set diff = data.kpis.attendance_pct - data.department_comparison.attendance_pct %}
-                    <span style="font-size: 0.8125rem; font-weight: 600; color: {% if diff >= 0 %}var(--present){% else %}var(--absent){% endif %}; margin-left: 6px;">
-                        ({% if diff >= 0 %}+{% endif %}{{ "%.2f"|format(diff) }}% vs dept)
-                    </span>
-                {% endif %}
-                {% else %}
-                    N/A
-                </strong>
-                {% endif %}
+                {{ "%.2f"|format(data.department_comparison.attendance_pct) }}%
+            </strong>
+            {% if data.kpis.attendance_pct is not none %}
+            {% set diff = data.kpis.attendance_pct - data.department_comparison.attendance_pct %}
+            <span
+                style="font-size: 0.8125rem; font-weight: 600; color: {% if diff >= 0 %}var(--present){% else %}var(--absent){% endif %}; margin-left: 6px;">
+                ({% if diff >= 0 %}+{% endif %}{{ "%.2f"|format(diff) }}% vs dept)
+            </span>
+            {% endif %}
+            {% else %}
+            N/A
+            </strong>
+            {% endif %}
         </div>
 
-        <div style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-            <span style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept Absenteeism Rate:</span>
+        <div
+            style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <span
+                style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept
+                Absenteeism Rate:</span>
             <strong style="color: var(--absent); font-size: 1.25rem;">
                 {% if data.department_comparison.absenteeism_pct is not none %}
-                    {{ "%.2f"|format(data.department_comparison.absenteeism_pct) }}%
+                {{ "%.2f"|format(data.department_comparison.absenteeism_pct) }}%
                 {% else %}
-                    N/A
+                N/A
                 {% endif %}
             </strong>
         </div>
 
-        <div style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-            <span style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept Eligible Days:</span>
-            <strong style="color: var(--text-headings); font-size: 1.25rem;">{{ data.department_comparison.eligible_days }}</strong>
+        <div
+            style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <span
+                style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Dept
+                Eligible Days:</span>
+            <strong style="color: var(--text-headings); font-size: 1.25rem;">{{ data.department_comparison.eligible_days
+                }}</strong>
         </div>
 
-        <div style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-            <span style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Calculation Rule:</span>
-            <span style="color: var(--text-muted); font-size: 0.8125rem; display: block; margin-top: 2px;">Calculated across sum of departmental records (never averages of percentages).</span>
+        <div
+            style="background: #ffffff; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <span
+                style="color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px;">Calculation
+                Rule:</span>
+            <span style="color: var(--text-muted); font-size: 0.8125rem; display: block; margin-top: 2px;">Calculated
+                across sum of departmental records (never averages of percentages).</span>
         </div>
     </div>
-    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 0.875rem; color: var(--text-muted);">
+    <div
+        style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 0.875rem; color: var(--text-muted);">
         {{ data.department_comparison.explanation }}
     </div>
 </div>
@@ -180,8 +207,10 @@
 <div class="rpt-charts-grid" style="margin-bottom: 24px;">
     <div class="card" style="margin-bottom: 0;">
         <h3 class="card-title" style="margin-bottom: 4px;">Monthly Attendance Trend</h3>
-        <p class="card-subtitle" style="margin-bottom: 16px;">Historical monthly trajectory for {{ data.employee.employee_name }}</p>
-        <div style="text-align: center; background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <p class="card-subtitle" style="margin-bottom: 16px;">Historical monthly trajectory for {{
+            data.employee.employee_name }}</p>
+        <div
+            style="text-align: center; background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
             <img src="/charts/file/{{ trend_chart }}" alt="Monthly Attendance Trend" class="chart-img">
         </div>
     </div>
@@ -189,7 +218,8 @@
     <div class="card" style="margin-bottom: 0;">
         <h3 class="card-title" style="margin-bottom: 4px;">Status Distribution</h3>
         <p class="card-subtitle" style="margin-bottom: 16px;">Overall breakdown of attendance types</p>
-        <div style="text-align: center; background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div
+            style="text-align: center; background: #fafcff; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
             <img src="/charts/file/{{ dist_chart }}" alt="Attendance Distribution" class="chart-img">
         </div>
     </div>
@@ -197,7 +227,8 @@
 
 <!-- Recent Absences & Leaves with Correction Links -->
 <div class="card" style="margin-bottom: 24px; padding: 0; overflow: hidden;">
-    <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div
+        style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
             <h3 class="card-title" style="font-size: 1.125rem;">Recent Absences &amp; Leave Exceptions</h3>
             <p class="card-subtitle">Direct links to modify mistaken records with required audit reasons</p>
@@ -237,7 +268,8 @@
                         Record #{{ ex.attendance_id }}
                     </td>
                     <td style="text-align: center;">
-                        <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}&attendance_date={{ ex.attendance_date }}" class="btn-action">
+                        <a href="/attendance/correct?employee_code={{ data.employee.employee_code }}&attendance_date={{ ex.attendance_date }}"
+                            class="btn-action">
                             Correct Record
                         </a>
                     </td>
@@ -288,13 +320,17 @@
                     <td style="text-align: center; color: var(--leave); font-weight: 600;">{{ m.leave }}</td>
                     <td style="text-align: center; color: var(--holiday);">{{ m.holiday }}</td>
                     <td style="text-align: center; font-weight: 700; color: var(--present);">
-                        {% if m.attendance_pct is not none %}{{ "%.2f"|format(m.attendance_pct) }}%{% else %}N/A{% endif %}
+                        {% if m.attendance_pct is not none %}{{ "%.2f"|format(m.attendance_pct) }}%{% else %}N/A{% endif
+                        %}
                     </td>
-                    <td style="text-align: center; font-weight: 700; color: {% if m.absenteeism_pct and m.absenteeism_pct > 10 %}var(--absent){% else %}var(--text-muted){% endif %};">
-                        {% if m.absenteeism_pct is not none %}{{ "%.2f"|format(m.absenteeism_pct) }}%{% else %}N/A{% endif %}
+                    <td
+                        style="text-align: center; font-weight: 700; color: {% if m.absenteeism_pct and m.absenteeism_pct > 10 %}var(--absent){% else %}var(--text-muted){% endif %};">
+                        {% if m.absenteeism_pct is not none %}{{ "%.2f"|format(m.absenteeism_pct) }}%{% else %}N/A{%
+                        endif %}
                     </td>
                     <td style="text-align: center;">
-                        <a href="/employees/{{ data.employee.employee_id }}/analytics?filter_period={{ m.period }}" class="btn-action">
+                        <a href="/employees/{{ data.employee.employee_id }}/analytics?filter_period={{ m.period }}"
+                            class="btn-action">
                             View Month
                         </a>
                     </td>

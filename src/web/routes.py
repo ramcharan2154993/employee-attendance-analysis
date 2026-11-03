@@ -77,6 +77,12 @@ def healthz() -> Any:
     return "ok", 200, {"Content-Type": "text/plain; charset=utf-8"}
 
 
+@bp.route("/welcome", methods=["GET"])
+def landing() -> Any:
+    """Public marketing landing page (no DB access, no employee data)."""
+    return render_template("landing.html")
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login() -> Any:
     """Render login page and process session authentication."""

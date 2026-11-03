@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ APP_NAME }} · {{ APP_TAGLINE }}</title>
+    <meta name="description" content="{{ APP_NAME }} · {{ APP_TAGLINE }} (Employee Attendance Analysis System)">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/landing.css">
+</head>
+<body class="landing-page">
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+    <input type="checkbox" id="mobile-nav-toggle" class="landing-nav-toggle" aria-hidden="true">
+
+    <!-- Sticky Top Navigation Bar -->
+    <header class="landing-header">
+        <div class="landing-header-inner">
+            <a href="/welcome" class="landing-brand" aria-label="{{ APP_NAME }} Home">
+                <svg class="app-logo-mark" width="36" height="36" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="landingLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#4f46e5" />
+                            <stop offset="100%" stop-color="#6366f1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="34" height="34" rx="10" fill="url(#landingLogoGrad)" />
+                    <path d="M10 17.5L15 22.5L24 12.5" stroke="#ffffff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="landing-brand-name">{{ APP_NAME }}</span>
+            </a>
+
+            <label for="mobile-nav-toggle" class="landing-nav-btn" aria-label="Toggle navigation menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </label>
+
+            <nav class="landing-nav" aria-label="Main Navigation">
+                <ul class="landing-nav-links">
+                    <li><a href="#features" class="landing-nav-link">Features</a></li>
+                    <li><a href="#how-it-works" class="landing-nav-link">How it works</a></li>
+                    <li><a href="#rules" class="landing-nav-link">Rules</a></li>
+                </ul>
+                <div class="landing-nav-actions">
+                    {% if current_user %}
+                    <a href="/" class="btn btn-primary btn-sm">Open dashboard</a>
+                    {% else %}
+                    <a href="/login" class="btn btn-primary btn-sm">Sign in</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Landmark -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="landing-hero" aria-labelledby="hero-title">
+            <span class="landing-badge">Employee Attendance Analysis System</span>
+
+            <h1 id="hero-title" class="landing-hero-title">{{ APP_TAGLINE }}</h1>
+
+            <p class="landing-hero-subtext">
+                Record daily attendance, correct mistakes with a full audit trail, and see attendance percentage and absenteeism by employee and department.
+            </p>
+
+            <div class="landing-hero-cta">
+                {% if current_user %}
+                <a href="/" class="btn btn-primary btn-lg">Open dashboard &rarr;</a>
+                {% else %}
+                <a href="/login" class="btn btn-primary btn-lg">Sign in &rarr;</a>
+                {% endif %}
+                <a href="#how-it-works" class="btn btn-secondary btn-lg">See how it works</a>
+            </div>
+
+            <!-- Stylised Dashboard Preview (Pure HTML/CSS, No external assets, Sample data) -->
+            <div class="product-preview-wrapper" aria-label="Product preview illustrative dashboard">
+                <div class="preview-top-chrome">
+                    <div class="chrome-dots" aria-hidden="true">
+                        <span class="chrome-dot"></span>
+                        <span class="chrome-dot"></span>
+                        <span class="chrome-dot"></span>
+                    </div>
+                    <div class="chrome-title-pill">{{ APP_NAME }} Overview</div>
+                    <span class="sample-badge">Sample data</span>
+                </div>
+
+                <div class="preview-body">
+                    <!-- 3 KPI Tiles with required sample figures -->
+                    <div class="preview-kpi-grid">
+                        <div class="preview-kpi-tile">
+                            <div class="preview-kpi-label">Attendance Rate</div>
+                            <div class="preview-kpi-val" style="color: var(--present);">85.71%</div>
+                        </div>
+                        <div class="preview-kpi-tile">
+                            <div class="preview-kpi-label">Absenteeism Rate</div>
+                            <div class="preview-kpi-val" style="color: var(--leave);">9.52%</div>
+                        </div>
+                        <div class="preview-kpi-tile">
+                            <div class="preview-kpi-label">Active Staff</div>
+                            <div class="preview-kpi-val" style="color: var(--primary);">6 employees</div>
+                        </div>
+                    </div>
+
+                    <!-- Split: Mini Bar Chart + Mini Table -->
+                    <div class="preview-split">
+                        <div class="preview-panel">
+                            <div class="preview-panel-title">Weekly Attendance Distribution</div>
+                            <div class="mini-chart" aria-hidden="true">
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar" style="height: 85%;"></div>
+                                    <span class="chart-bar-label">Mon</span>
+                                </div>
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar" style="height: 92%;"></div>
+                                    <span class="chart-bar-label">Tue</span>
+                                </div>
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar" style="height: 80%;"></div>
+                                    <span class="chart-bar-label">Wed</span>
+                                </div>
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar" style="height: 88%;"></div>
+                                    <span class="chart-bar-label">Thu</span>
+                                </div>
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar" style="height: 84%;"></div>
+                                    <span class="chart-bar-label">Fri</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-panel">
+                            <div class="preview-panel-title">Department Attendance Snapshot</div>
+                            <table class="mini-table" aria-label="Sample Department Summary">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th style="text-align: right;">Present</th>
+                                        <th style="text-align: right;">Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Engineering</td>
+                                        <td style="text-align: right;">18</td>
+                                        <td style="text-align: right; font-weight: 700; color: var(--present);">90.00%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Marketing</td>
+                                        <td style="text-align: right;">16</td>
+                                        <td style="text-align: right; font-weight: 700; color: var(--present);">84.21%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Operations</td>
+                                        <td style="text-align: right;">14</td>
+                                        <td style="text-align: right; font-weight: 700; color: var(--leave);">82.35%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="landing-section" aria-labelledby="features-heading">
+            <div class="section-header">
+                <span class="section-kicker">Core Capabilities</span>
+                <h2 id="features-heading" class="section-title">Engineered for accuracy and administrative clarity</h2>
+                <p class="section-subtext">
+                    Everything workforce leaders need to log presence, resolve discrepancies, and understand staffing attendance trends.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Daily attendance and department-wide holidays</h3>
+                    <p class="feature-card-text">
+                        Record daily attendance entries by department roster or individual logs, with automated company-wide public holiday scheduling.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Corrections with a complete audit trail</h3>
+                    <p class="feature-card-text">
+                        Track every status modification with permanent history recording old status, new status, mandatory reason, operator, and timestamp.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <polyline points="16 11 18 13 22 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Attendance % and absenteeism % per employee</h3>
+                    <p class="feature-card-text">
+                        Evaluate employee attendance percentage and absenteeism rates calculated with mathematical rigor and zero division errors.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Department summaries and ranking</h3>
+                    <p class="feature-card-text">
+                        Aggregate departmental performance by total attendance days, avoiding flawed averages of percentages across varying team sizes.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Monthly reports and charts</h3>
+                    <p class="feature-card-text">
+                        Access detailed monthly summaries, high-contrast absenteeism ranking tables, and server-side visual trend graphics.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-icon-chip" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card-title">Secure login with Admin and HR roles</h3>
+                    <p class="feature-card-text">
+                        Authenticate authorized users with password hashing, automated account lockout protection, and role-based route access controls.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="landing-section" aria-labelledby="how-it-works-heading">
+            <div class="section-header">
+                <span class="section-kicker">Operational Workflow</span>
+                <h2 id="how-it-works-heading" class="section-title">Three disciplined steps to complete clarity</h2>
+                <p class="section-subtext">
+                    A streamlined pipeline that prevents duplicate entries and preserves operational transparency.
+                </p>
+            </div>
+
+            <div class="steps-grid">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-number" aria-hidden="true">1</div>
+                    <h3 class="step-title">Record</h3>
+                    <p class="step-text">
+                        Input daily attendance by department roster or individual entries, and register company-wide public holidays in atomic database transactions.
+                    </p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-number" aria-hidden="true">2</div>
+                    <h3 class="step-title">Correct and audit</h3>
+                    <p class="step-text">
+                        Adjust mistaken entries using authorized administrative corrections with mandatory reason notes preserved forever in an append-only audit trail.
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-number" aria-hidden="true">3</div>
+                    <h3 class="step-title">Analyse</h3>
+                    <p class="step-text">
+                        Review real-time employee attendance rates, department performance benchmarks, and monthly trend graphs with complete mathematical accuracy.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rules You Can Trust Section -->
+        <section id="rules" class="landing-section" aria-labelledby="rules-heading">
+            <div class="section-header">
+                <span class="section-kicker">Guaranteed Standards</span>
+                <h2 id="rules-heading" class="section-title">Rules you can trust</h2>
+                <p class="section-subtext">
+                    Transparent, unyielding business rules designed to ensure workforce fairness and data integrity.
+                </p>
+            </div>
+
+            <div class="rules-wrapper">
+                <ul class="rules-list">
+                    <li class="rule-item">
+                        <span class="rule-check" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="rule-text">Leave is not absenteeism</span>
+                    </li>
+                    <li class="rule-item">
+                        <span class="rule-check" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="rule-text">Holidays are excluded from working days</span>
+                    </li>
+                    <li class="rule-item">
+                        <span class="rule-check" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="rule-text">A missing record is never counted as an absence</span>
+                    </li>
+                    <li class="rule-item">
+                        <span class="rule-check" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="rule-text">No eligible days shows "N/A", never a misleading 0%</span>
+                    </li>
+                    <li class="rule-item" style="grid-column: 1 / -1;">
+                        <span class="rule-check" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="rule-text">Employees are never deleted, only deactivated, so history is never lost</span>
+                    </li>
+                </ul>
+
+                <div class="formula-box">
+                    <span class="formula-label">Core Attendance Metric Formula</span>
+                    <span class="formula-display">Attendance % = Present ÷ (Present + Absent + Leave) × 100</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Built-With Section -->
+        <section class="built-with-section" aria-labelledby="built-with-heading">
+            <h2 id="built-with-heading" class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Built With Technology Stack</h2>
+            <div class="built-with-inner">
+                <span class="built-with-label">Built With</span>
+                <span class="tech-chip">MySQL</span>
+                <span class="tech-chip">Python</span>
+                <span class="tech-chip">Flask</span>
+                <span class="tech-chip">Pandas</span>
+                <span class="tech-chip">NumPy</span>
+                <span class="tech-chip">Matplotlib</span>
+            </div>
+        </section>
+
+        <!-- Final Call to Action Band -->
+        <section class="cta-band" aria-labelledby="cta-heading">
+            <div class="cta-band-inner">
+                <h2 id="cta-heading" class="cta-title">Ready to see your team's attendance clearly?</h2>
+                <p class="cta-subtext">
+                    Experience structured attendance tracking with automated reconciliation, departmental benchmarks, and audit integrity.
+                </p>
+                {% if current_user %}
+                <a href="/" class="btn btn-primary btn-lg" style="background: #ffffff; color: var(--primary) !important; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+                    Open dashboard &rarr;
+                </a>
+                {% else %}
+                <a href="/login" class="btn btn-primary btn-lg" style="background: #ffffff; color: var(--primary) !important; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+                    Sign in &rarr;
+                </a>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="landing-footer-inner">
+            <div class="landing-footer-copy">
+                <strong>{{ APP_NAME }}</strong> &bull; <span>{{ APP_TAGLINE }}</span>
+            </div>
+            <div class="landing-footer-links">
+                {% if current_user %}
+                <a href="/" class="landing-footer-link">Dashboard</a>
+                {% else %}
+                <a href="/login" class="landing-footer-link">Sign in</a>
+                {% endif %}
+                <span>&bull;</span>
+                <span style="color: var(--text-dim); font-size: 0.8125rem;">Sample data only on public demos.</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

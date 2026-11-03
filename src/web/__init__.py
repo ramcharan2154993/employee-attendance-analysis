@@ -182,7 +182,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
 
         if require_auth and g.current_user is None:
             endpoint = request.endpoint
-            exempt = {"routes.login", "static", "routes.healthz"}
+            exempt = {"routes.login", "static", "routes.healthz", "routes.landing"}
             if endpoint and endpoint not in exempt:
                 if request.method == "GET":
                     target = request.full_path if request.query_string else request.path

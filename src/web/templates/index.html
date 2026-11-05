@@ -10,7 +10,7 @@
 
 {% block content %}
 <!-- Greeting & Page Header -->
-<div class="page-header">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div class="page-header-text">
         <h1 class="page-header-title">
             {% if current_user %}
@@ -19,17 +19,34 @@
             Attendance Dashboard
             {% endif %}
         </h1>
-        <p class="page-header-subtitle">{{ APP_TAGLINE }} &bull; Real-time workforce telemetry &amp; analytics</p>
+        <p class="page-header-subtitle">{{ APP_TAGLINE }} &bull; Real-time workforce telemetry &amp; compliance analytics</p>
     </div>
-    <div class="page-header-actions">
-        <a href="/?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary" title="Refresh Dashboard Data (Auto-refreshes every 60s)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <div class="page-header-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <!-- Quick Export Shortcuts -->
+        <a href="/reports/department/pdf?department=all&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" title="Export Organization Monthly Statement as PDF">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            PDF Report
+        </a>
+        <a href="/reports/department/excel?department=all&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" title="Export Organization Monthly Spreadsheet as Excel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="8" y1="13" x2="16" y2="13"></line>
+                <line x1="8" y1="17" x2="16" y2="17"></line>
+            </svg>
+            Excel Export
+        </a>
+        <a href="/?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm" title="Refresh Dashboard Data (Auto-refreshes every 60s)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
             </svg>
             Refresh
         </a>
-        <a href="/attendance/department" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <a href="/attendance/department" class="btn btn-secondary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -37,17 +54,8 @@
             </svg>
             Record Department
         </a>
-        <a href="/holidays/new" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Record Holiday
-        </a>
-        <a href="/employees/new" class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <a href="/employees/new" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -56,8 +64,8 @@
     </div>
 </div>
 
-<!-- Reporting Period Selector Toolbar (Full Width Glassmorphic Card) -->
-<div class="card" style="padding: 16px 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+<!-- Reporting Period Selector Toolbar -->
+<div class="card" style="padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
         <span style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -70,7 +78,7 @@
         </span>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             {% for y, m, m_name in available_months %}
-            <a href="/?year={{ y }}&month={{ m }}" class="btn btn-sm {% if metrics.year == y and metrics.month == m %}btn-primary{% else %}btn-secondary{% endif %}" style="height: 34px; padding: 4px 16px; font-size: 0.875rem;">
+            <a href="/?year={{ y }}&month={{ m }}" class="btn btn-sm {% if metrics.year == y and metrics.month == m %}btn-primary{% else %}btn-secondary{% endif %}" style="height: 32px; padding: 2px 14px; font-size: 0.8125rem;">
                 {{ m_name }}
             </a>
             {% endfor %}
@@ -79,7 +87,7 @@
     <div style="font-size: 0.875rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <span>Period: <strong style="color: var(--text-headings); font-weight: 700;">{{ metrics.month_name }}</strong></span>
         <span>&bull;</span>
-        <span><strong>{{ metrics.eligible_days }}</strong> eligible day{% if metrics.eligible_days != 1 %}s{% endif %}</span>
+        <span><strong>{{ metrics.eligible_days }}</strong> eligible workday{% if metrics.eligible_days != 1 %}s{% endif %}</span>
         <span style="display: inline-flex; gap: 6px; margin-left: 4px;">
             <span class="badge badge-present" style="padding: 2px 8px; font-size: 0.75rem;">{{ metrics.present }} Present</span>
             <span class="badge badge-absent" style="padding: 2px 8px; font-size: 0.75rem;">{{ metrics.absent }} Absent</span>
@@ -88,21 +96,137 @@
     </div>
 </div>
 
-<!-- Row of 4 Premium KPI Stat Cards -->
-<div class="kpi-grid">
+<!-- Row of 4 Executive KPI Stat Cards -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
     {{ kpi_card('ACTIVE EMPLOYEES', active_count, 'Total Roster', 'blue', 'users') }}
     
     {% set att_val = ("%.1f"|format(metrics.attendance_pct) ~ "%") if metrics.attendance_pct is not none else "N/A" %}
-    {{ kpi_card('ATTENDANCE RATE', att_val, metrics.month_name, 'green', 'check-circle') }}
+    {{ kpi_card('ORG ATTENDANCE', att_val, metrics.month_name, 'green', 'check-circle') }}
     
-    {% set abs_val = ("%.1f"|format(metrics.absenteeism_pct) ~ "%") if metrics.absenteeism_pct is not none else "N/A" %}
-    {{ kpi_card('ABSENTEEISM RATE', abs_val, metrics.month_name, 'orange', 'alert-triangle') }}
-    
-    {{ kpi_card('LEAVE DAYS', metrics.leave, metrics.month_name, 'slate', 'calendar') }}
+    <!-- Critical Risk (< 75%) -->
+    <a href="/alerts?year={{ metrics.year }}&month={{ metrics.month }}&level=CRITICAL" style="text-decoration: none; color: inherit;">
+        <div class="card stat-card" style="border-top: 4px solid #dc2626; transition: transform 0.15s ease; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="stat-title" style="color: #dc2626; font-weight: 700;">CRITICAL RISK (&lt; {{ "%.0f"|format(threshold) }}%)</div>
+                    <div class="stat-value" style="color: #dc2626;">{{ alert_metrics.critical }}</div>
+                </div>
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; color: #dc2626;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+            </div>
+            <small style="color: var(--text-muted); display: block; margin-top: 6px;">Immediate HR intervention needed &rarr;</small>
+        </div>
+    </a>
+
+    <!-- Attention Needed (75% - 85%) -->
+    <a href="/alerts?year={{ metrics.year }}&month={{ metrics.month }}&level=ATTENTION" style="text-decoration: none; color: inherit;">
+        <div class="card stat-card" style="border-top: 4px solid #d97706; transition: transform 0.15s ease; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="stat-title" style="color: #d97706; font-weight: 700;">ATTENTION NEEDED</div>
+                    <div class="stat-value" style="color: #d97706;">{{ alert_metrics.attention }}</div>
+                </div>
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <small style="color: var(--text-muted); display: block; margin-top: 6px;">Borderline attendance &rarr;</small>
+        </div>
+    </a>
 </div>
 
+<!-- Attendance Risk Warning Center Widget -->
+{% if recent_alerts %}
+<div class="card" style="margin-bottom: 24px; padding: 0; overflow: hidden; border: 1px solid #fecaca; border-left: 5px solid #dc2626;">
+    <div style="padding: 16px 22px; background: #fff5f5; border-bottom: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+                <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #991b1b;">
+                    Attendance Warning Center &bull; High Risk Focus ({{ metrics.month_name }})
+                </h3>
+                <span style="font-size: 0.8125rem; color: #b91c1c;">
+                    Employees flagged below {{ "%.0f"|format(threshold) }}% compliance threshold or pending HR review
+                </span>
+            </div>
+        </div>
+        <a href="/alerts?year={{ metrics.year }}&month={{ metrics.month }}" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem;">
+            View All Alerts ({{ alert_metrics.total }}) &rarr;
+        </a>
+    </div>
+
+    <div style="overflow-x: auto; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+            <thead>
+                <tr style="background: #fafafa; border-bottom: 1px solid var(--border-color); color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">
+                    <th style="padding: 10px 18px;">Employee</th>
+                    <th style="padding: 10px 14px;">Department</th>
+                    <th style="padding: 10px 14px;">Attendance %</th>
+                    <th style="padding: 10px 14px;">Risk Tier</th>
+                    <th style="padding: 10px 14px;">Review State</th>
+                    <th style="padding: 10px 18px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in recent_alerts %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px 18px;">
+                        <a href="/employees/{{ a.employee_id }}?year={{ a.year }}&month={{ a.month }}" style="font-weight: 600; color: var(--primary-color); text-decoration: none;">
+                            {{ a.employee_name }}
+                        </a>
+                        <span style="color: var(--text-dim); font-size: 0.75rem; margin-left: 6px;"><code>{{ a.employee_code }}</code></span>
+                    </td>
+                    <td style="padding: 12px 14px; color: var(--text-dim);">{{ a.department }}</td>
+                    <td style="padding: 12px 14px;">
+                        <strong style="color: {% if a.warning_level == 'CRITICAL' %}#dc2626{% else %}#d97706{% endif %};">
+                            {{ "%.1f"|format(a.attendance_pct) }}%
+                        </strong>
+                        <span style="font-size: 0.75rem; color: var(--text-dim);">({{ a.present_days }}P / {{ a.absent_days }}A)</span>
+                    </td>
+                    <td style="padding: 12px 14px;">
+                        {% if a.warning_level == 'CRITICAL' %}
+                        <span style="font-size: 0.6875rem; font-weight: 800; background: #fee2e2; color: #991b1b; padding: 2px 7px; border-radius: 4px;">CRITICAL</span>
+                        {% else %}
+                        <span style="font-size: 0.6875rem; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 7px; border-radius: 4px;">ATTENTION</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 14px;">
+                        {% if a.is_reviewed %}
+                        <span style="color: #166534; font-size: 0.75rem; font-weight: 600;">✓ Reviewed</span>
+                        {% else %}
+                        <span style="color: #b91c1c; font-size: 0.75rem; font-weight: 600;">Pending Sign-off</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 18px; text-align: right;">
+                        <a href="/employees/{{ a.employee_id }}/report/pdf?year={{ a.year }}&month={{ a.month }}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">
+                            PDF
+                        </a>
+                        <a href="/alerts?year={{ a.year }}&month={{ a.month }}" class="btn-action" style="font-size: 0.75rem; margin-left: 6px;">
+                            Review
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <!-- Main 2-Column Responsive Dashboard Grid (8 cols / 4 cols) -->
-<div class="dashboard-grid">
+<div class="dashboard-grid" style="margin-bottom: 24px;">
     <!-- Left Column: Attendance Trends & Analytics Chart -->
     <div class="card" style="margin-bottom: 0;">
         <div class="card-header">
@@ -189,4 +313,88 @@
         </div>
     </div>
 </div>
+
+<!-- Department Attendance Health Breakdown Table -->
+{% if departments %}
+<div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+    <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #fafbfc;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.0625rem; font-weight: 700; color: var(--text-headings);">
+                Department Attendance Health &bull; {{ metrics.month_name }}
+            </h3>
+            <p style="margin: 3px 0 0 0; font-size: 0.8125rem; color: var(--text-muted);">
+                Comparative departmental performance, absenteeism rates, and low attendance indicators
+            </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="/reports/department/pdf?department=all&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" title="Download Department Comparative Statement">
+                PDF Breakdown
+            </a>
+            <a href="/reports/department/excel?department=all&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" title="Export Department Workbook">
+                Excel Breakdown
+            </a>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 1px solid var(--border-color); color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">
+                    <th style="padding: 12px 20px;">Department</th>
+                    <th style="padding: 12px 16px; text-align: center;">Headcount</th>
+                    <th style="padding: 12px 16px; text-align: center;">Present Days</th>
+                    <th style="padding: 12px 16px; text-align: center;">Absent Days</th>
+                    <th style="padding: 12px 16px; text-align: center;">Attendance %</th>
+                    <th style="padding: 12px 16px; text-align: center;">Absenteeism %</th>
+                    <th style="padding: 12px 20px; text-align: right;">Department Export</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in departments %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 14px 20px; font-weight: 700; color: var(--text-headings);">
+                        {{ d.department }}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+                            {{ d.total_employees }}
+                        </span>
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center; color: #15803d; font-weight: 600;">
+                        {{ d.present }}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center; color: #b91c1c; font-weight: 600;">
+                        {{ d.absent }}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        <span style="font-weight: 800; padding: 3px 9px; border-radius: 999px; font-size: 0.8125rem;
+                            {% if d.attendance_pct is not none and d.attendance_pct < threshold %}
+                                background: #fee2e2; color: #991b1b;
+                            {% elif d.attendance_pct is not none and d.attendance_pct < 85.0 %}
+                                background: #fef3c7; color: #92400e;
+                            {% else %}
+                                background: #dcfce7; color: #166534;
+                            {% endif %}">
+                            {% if d.attendance_pct is not none %}{{ "%.1f"|format(d.attendance_pct) }}%{% else %}N/A{% endif %}
+                        </span>
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center; font-weight: 600; color: {% if d.absenteeism_pct and d.absenteeism_pct > 15 %}#dc2626{% else %}var(--text-muted){% endif %};">
+                        {% if d.absenteeism_pct is not none %}{{ "%.1f"|format(d.absenteeism_pct) }}%{% else %}N/A{% endif %}
+                    </td>
+                    <td style="padding: 14px 20px; text-align: right;">
+                        <a href="/reports/department/pdf?department={{ d.department }}&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" style="padding: 2px 10px; font-size: 0.75rem;" title="Download {{ d.department }} PDF">
+                            PDF
+                        </a>
+                        <a href="/reports/department/excel?department={{ d.department }}&period={{ metrics.year }}-{{ '%02d'|format(metrics.month) }}" class="btn btn-secondary btn-sm" style="padding: 2px 10px; font-size: 0.75rem; margin-left: 4px;" title="Download {{ d.department }} Excel">
+                            Excel
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

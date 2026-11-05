@@ -15,6 +15,7 @@ def conn():
 
     connection = get_connection(test_db)
     cursor = connection.cursor()
+    cursor.execute("DELETE FROM attendance_alerts")
     cursor.execute("DELETE FROM attendance_audit")
     cursor.execute("DELETE FROM attendance")
     cursor.execute("DELETE FROM employees")

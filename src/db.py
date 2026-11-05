@@ -141,6 +141,72 @@ def migrate_auth_and_audit(conn: MySQLConnectionAbstract) -> None:
         cursor.close()
 
 
+def migrate_profile_and_alerts(conn: MySQLConnectionAbstract) -> None:
+    """Safely and idempotently ensure profile columns, system_settings, and attendance_alerts exist."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SHOW TABLES LIKE 'employees'")
+        if cursor.fetchone():
+            cursor.execute("SHOW COLUMNS FROM employees")
+            existing_columns = {row[0] for row in cursor.fetchall()}
+
+            new_columns = [
+                ("email", "VARCHAR(100) NULL"),
+                ("mobile_number", "VARCHAR(20) NULL"),
+                ("alt_phone", "VARCHAR(20) NULL"),
+                ("designation", "VARCHAR(50) NULL"),
+                ("profile_photo", "VARCHAR(255) NULL"),
+            ]
+            for col_name, col_def in new_columns:
+                if col_name not in existing_columns:
+                    cursor.execute(f"ALTER TABLE employees ADD COLUMN {col_name} {col_def}")
+                    conn.commit()
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS system_settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value VARCHAR(255) NOT NULL,
+                description VARCHAR(255) NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            INSERT IGNORE INTO system_settings (setting_key, setting_value, description)
+            VALUES ('attendance_critical_threshold', '75.0', 'Critical attendance warning threshold percentage')
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS attendance_alerts (
+                alert_id INT AUTO_INCREMENT PRIMARY KEY,
+                employee_id INT NOT NULL,
+                year INT NOT NULL,
+                month INT NOT NULL,
+                attendance_pct DECIMAL(5,2) NULL,
+                eligible_days INT NOT NULL,
+                present_days INT NOT NULL,
+                absent_days INT NOT NULL,
+                warning_level ENUM('NORMAL', 'ATTENTION', 'CRITICAL') NOT NULL,
+                threshold_applied DECIMAL(5,2) NOT NULL,
+                is_reviewed BOOLEAN NOT NULL DEFAULT FALSE,
+                reviewed_by INT NULL,
+                reviewed_at DATETIME NULL,
+                notes TEXT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_emp_period (employee_id, year, month),
+                FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+            )
+            """
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+
+
 def apply_schema(database_name: str) -> None:
     """Read database/schema.sql, apply each statement, and execute schema migrations."""
     schema_path = Path(__file__).resolve().parent.parent / "database" / "schema.sql"
@@ -158,6 +224,7 @@ def apply_schema(database_name: str) -> None:
         cursor.close()
         migrate_schema(conn)
         migrate_auth_and_audit(conn)
+        migrate_profile_and_alerts(conn)
     finally:
         conn.close()
 

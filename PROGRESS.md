@@ -1,9 +1,9 @@
 # PROGRESS.md: Employee Attendance Analysis System
 
-Last updated: 2026-10-19
+Last updated: 2026-11-03
 
 ## Current status (one line)
-Phase 1, Phase 2, and Phase 3 (Final UI/UX Redesign, Searchable Selectors, and Navigation Enhancements) completed and verified with 127 automated tests passing.
+Phase 13 (Attendance Intelligence, Smart Warnings & Advanced Reporting Upgrade: Modules 1-7) completed and verified with 217 automated tests passing.
 
 ## Phases
 | Phase | Status | Evidence (real command and result) |
@@ -21,6 +21,8 @@ Phase 1, Phase 2, and Phase 3 (Final UI/UX Redesign, Searchable Selectors, and N
 | 9. Phase 1 - Migration & Rules | Tested and passed | pytest: 105 passed in 12.25s (joining dates, department helpers, migration recovery) |
 | 10. Phase 2 - Bulk Attendance & UI/UX | Tested and passed | pytest: 124 passed in 11.73s (department batch attendance, atomic rollback, conflict checks, UI redesign, CLI menu) |
 | 11. Phase 3 - Final UI/UX & Searchable Selectors | Tested and passed | pytest: 127 passed in 13.45s (active navigation indicators, searchable employee selectors, reports subnav & defaults, responsive containers) |
+| 12. Public Landing Page (/welcome) | Tested and passed | pytest tests/test_landing.py (7 passed in 4.27s), full suite (193 passed in 69.14s) |
+| 13. Smart Warnings, Diagnostics & Reports Upgrade | Tested and passed | pytest: 217 passed in 83.23s (Contact profiles, PDF/Excel generation, Smart alerts, Heatmaps, Notifications, Executive dashboard) |
 
 
 Status words: Not started / In progress / Implemented but not verified / Tested and passed / Blocked.
@@ -51,6 +53,7 @@ Only write "Tested and passed" when a real test run proves it, and paste the res
 - D1 to D5 approved: holiday rows per employee, leave counts in the denominator, department % by total days, deactivate not delete, command-line menu. Details are in PROJECT_CONTEXT.md.
 - D6 (changes D5): a Flask web interface is added after the menu; the command-line menu stays. Safety rules are in PROJECT_CONTEXT.md.
 - D7: a login for head users is added (full access, no public pages), and the site may be hosted publicly with fake data. Power BI was considered and is not needed.
+- D8: One new public page is allowed: GET /welcome. It is the only public page besides /login, /healthz and static files. Every other page still requires login. The landing page contains 100% static marketing content with NO database calls (no get_db(), no analysis/attendance/employees imports, no real employee names/numbers).
 
 ## Problems we hit and how we fixed them
 - ENUM strict mode: see final check result: SELECT @@sql_mode returned ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION (STRICT_TRANS_TABLES is active; invalid ENUM values are strictly rejected by MySQL).

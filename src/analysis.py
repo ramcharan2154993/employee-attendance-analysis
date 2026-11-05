@@ -1,5 +1,6 @@
 """Attendance analysis and aggregation using Pandas and NumPy."""
 
+import calendar
 import datetime
 from typing import Any
 import pandas as pd
@@ -362,7 +363,8 @@ def get_employee_analytics_data(
     try:
         cursor.execute(
             """
-            SELECT employee_id, employee_code, employee_name, department, is_active, joining_date
+            SELECT employee_id, employee_code, employee_name, department, is_active, joining_date,
+                   email, mobile_number, alt_phone, designation, profile_photo
             FROM employees
             WHERE employee_id = %s
             """,
@@ -470,6 +472,8 @@ def get_employee_analytics_data(
 
         available_months = get_available_months(conn)
 
+        patterns = analyze_employee_patterns(period_records, monthly_trends)
+
         return {
             "employee": emp,
             "reporting_period": reporting_period_label,
@@ -502,9 +506,309 @@ def get_employee_analytics_data(
             "monthly_trends": monthly_trends,
             "recent_exceptions": recent_exceptions,
             "records": period_records,
+            "patterns": patterns,
         }
     finally:
         cursor.close()
+
+
+def analyze_employee_patterns(
+    records: list[dict],
+    monthly_trends: list[dict],
+    critical_threshold: float = 75.0,
+) -> dict[str, Any]:
+    """Calculate advanced attendance behavior patterns: streaks, weekdays, and factual insights."""
+    sorted_records = sorted(
+        records,
+        key=lambda r: (
+            datetime.date.fromisoformat(r["attendance_date"])
+            if isinstance(r["attendance_date"], str)
+            else r["attendance_date"]
+        ),
+    )
+
+    max_streak = 0
+    current_streak = 0
+    max_streak_start = None
+    max_streak_end = None
+    cur_streak_start = None
+
+    weekday_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+    weekday_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+    for r in sorted_records:
+        ad = r["attendance_date"]
+        if isinstance(ad, str):
+            ad = datetime.date.fromisoformat(ad)
+        st = r["status"]
+
+        if st == "Absent":
+            if ad.weekday() in weekday_counts:
+                weekday_counts[ad.weekday()] += 1
+
+            if current_streak == 0:
+                cur_streak_start = ad
+            current_streak += 1
+
+            if current_streak > max_streak:
+                max_streak = current_streak
+                max_streak_start = cur_streak_start
+                max_streak_end = ad
+        else:
+            current_streak = 0
+            cur_streak_start = None
+
+    sorted_weekdays = sorted(weekday_counts.items(), key=lambda x: x[1], reverse=True)
+    top_w_idx, top_w_count = sorted_weekdays[0]
+    top_weekday_str = (
+        f"{weekday_names[top_w_idx]} ({top_w_count} absence{'s' if top_w_count != 1 else ''})"
+        if top_w_count > 0
+        else "None (0 absences)"
+    )
+
+    months_below = [
+        m
+        for m in monthly_trends
+        if m.get("attendance_pct") is not None and m["attendance_pct"] < critical_threshold
+    ]
+    below_count = len(months_below)
+
+    trend_description = "Insufficient history for multi-month trend comparison."
+    if len(monthly_trends) >= 2:
+        prev_m = monthly_trends[-2]
+        curr_m = monthly_trends[-1]
+        p_pct = prev_m.get("attendance_pct")
+        c_pct = curr_m.get("attendance_pct")
+        if p_pct is not None and c_pct is not None:
+            diff = c_pct - p_pct
+            if abs(diff) < 0.05:
+                trend_description = (
+                    f"Attendance remained steady from {prev_m['label']} ({p_pct:.1f}%) to {curr_m['label']} ({c_pct:.1f}%)."
+                )
+            elif diff > 0:
+                trend_description = (
+                    f"Attendance improved by {diff:.1f}% from {prev_m['label']} ({p_pct:.1f}%) to {curr_m['label']} ({c_pct:.1f}%)."
+                )
+            else:
+                trend_description = (
+                    f"Attendance declined by {abs(diff):.1f}% from {prev_m['label']} ({p_pct:.1f}%) to {curr_m['label']} ({c_pct:.1f}%)."
+                )
+
+    total_absent = sum(1 for r in sorted_records if r["status"] == "Absent")
+    summary_parts = []
+    if total_absent == 0:
+        summary_parts.append("The employee recorded zero absences during the selected reporting period.")
+    else:
+        summary_parts.append(f"A total of {total_absent} absence(s) were recorded during this period.")
+        if max_streak > 1:
+            summary_parts.append(f"The maximum consecutive absence streak was {max_streak} day(s).")
+        if top_w_count > 1:
+            summary_parts.append(
+                f"Most frequent absence weekday was {weekday_names[top_w_idx]} ({top_w_count} times)."
+            )
+
+    if below_count > 0:
+        summary_parts.append(
+            f"Attendance dropped below the {critical_threshold:.0f}% threshold in {below_count} month(s)."
+        )
+    else:
+        summary_parts.append(
+            f"Attendance consistently satisfied or exceeded the {critical_threshold:.0f}% threshold."
+        )
+
+    factual_summary = " ".join(summary_parts)
+
+    return {
+        "max_consecutive_absences": max_streak,
+        "max_streak_start": max_streak_start,
+        "max_streak_end": max_streak_end,
+        "weekday_absences": {weekday_names[k]: v for k, v in weekday_counts.items()},
+        "top_absent_weekday": top_weekday_str,
+        "months_below_threshold": below_count,
+        "trend_description": trend_description,
+        "factual_summary": factual_summary,
+    }
+
+
+def build_employee_calendar_matrix(
+    year: int,
+    month: int,
+    records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Generate a structured monthly calendar grid annotated with attendance status for visual heatmaps."""
+    record_map: dict[datetime.date, dict[str, Any]] = {}
+    for r in records:
+        ad = r["attendance_date"]
+        if isinstance(ad, str):
+            ad = datetime.date.fromisoformat(ad)
+        record_map[ad] = r
+
+    cal = calendar.monthcalendar(year, month)
+    weeks = []
+    status_counts: dict[str, int] = {
+        "Present": 0,
+        "Absent": 0,
+        "Leave": 0,
+        "Holiday": 0,
+        "Weekend": 0,
+        "Unrecorded": 0,
+    }
+
+    for week in cal:
+        week_days = []
+        for day in week:
+            if day == 0:
+                week_days.append({
+                    "day": None,
+                    "date": None,
+                    "is_padding": True,
+                    "status": None,
+                })
+            else:
+                d = datetime.date(year, month, day)
+                is_weekend = d.weekday() >= 5
+                rec = record_map.get(d)
+                if rec:
+                    st = rec["status"]
+                    att_id = rec.get("attendance_id")
+                    if st in status_counts:
+                        status_counts[st] += 1
+                elif is_weekend:
+                    st = "Weekend"
+                    att_id = None
+                    status_counts["Weekend"] += 1
+                else:
+                    st = "Unrecorded"
+                    att_id = None
+                    status_counts["Unrecorded"] += 1
+
+                week_days.append({
+                    "day": day,
+                    "date": d.isoformat(),
+                    "weekday": d.weekday(),
+                    "is_weekend": is_weekend,
+                    "is_padding": False,
+                    "status": st,
+                    "attendance_id": att_id,
+                })
+        weeks.append(week_days)
+
+    return {
+        "year": year,
+        "month": month,
+        "month_label": datetime.date(year, month, 1).strftime("%B %Y"),
+        "weeks": weeks,
+        "status_counts": status_counts,
+    }
+
+
+def get_department_report_data(
+    conn: MySQLConnectionAbstract,
+    department: str | None = None,
+    year: int | None = None,
+    month: int | None = None,
+    critical_threshold: float = 75.0,
+) -> dict[str, Any]:
+    """Compile aggregated department-level and employee-wise metrics for reports."""
+    import calendar
+    from src.calculations import (
+        calculate_absenteeism_percentage,
+        calculate_attendance_percentage,
+        eligible_days,
+    )
+
+    clean_dept = (
+        department.strip()
+        if department and department.strip() and department.strip().lower() != "all"
+        else None
+    )
+
+    start_date = None
+    end_date = None
+    reporting_period = "All Time"
+    if year is not None and month is not None:
+        _, last_day = calendar.monthrange(year, month)
+        start_date = datetime.date(year, month, 1)
+        end_date = datetime.date(year, month, last_day)
+        reporting_period = start_date.strftime("%B %Y")
+
+    df = load_attendance_df(conn, start_date=start_date, end_date=end_date)
+
+    if clean_dept:
+        df_scoped = df[df["department"] == clean_dept].copy()
+    else:
+        df_scoped = df.copy()
+
+    total_employees = len(df_scoped["employee_code"].unique()) if not df_scoped.empty else 0
+
+    present_total = int((df_scoped["status"] == "Present").sum()) if not df_scoped.empty else 0
+    absent_total = int((df_scoped["status"] == "Absent").sum()) if not df_scoped.empty else 0
+    leave_total = int((df_scoped["status"] == "Leave").sum()) if not df_scoped.empty else 0
+    holiday_total = int((df_scoped["status"] == "Holiday").sum()) if not df_scoped.empty else 0
+    eligible_total = eligible_days(present_total, absent_total, leave_total)
+
+    overall_att_pct = calculate_attendance_percentage(present_total, absent_total, leave_total)
+    overall_abs_pct = calculate_absenteeism_percentage(present_total, absent_total, leave_total)
+
+    emp_summary_df = employee_summary(df_scoped)
+    dept_summary_df = department_summary(df)
+
+    employee_rows = []
+    employees_below = []
+
+    for _, row in emp_summary_df.iterrows():
+        att_pct = row["attendance_pct"]
+        if att_pct is None:
+            warning_level = "NO_DATA"
+            warning_label = "No Records"
+        elif att_pct < critical_threshold:
+            warning_level = "CRITICAL"
+            warning_label = "Below 75%"
+        elif att_pct < 85.0:
+            warning_level = "ATTENTION"
+            warning_label = "Attention (75-85%)"
+        else:
+            warning_level = "NORMAL"
+            warning_label = "Normal (>=85%)"
+
+        item = {
+            "employee_code": row["employee_code"],
+            "employee_name": row["employee_name"],
+            "department": row["department"],
+            "present": int(row["present"]),
+            "absent": int(row["absent"]),
+            "leave": int(row["leave"]),
+            "holiday": int(row["holiday"]),
+            "eligible_days": int(row["eligible_days"]),
+            "attendance_pct": att_pct,
+            "absenteeism_pct": row["absenteeism_pct"],
+            "warning_level": warning_level,
+            "warning_label": warning_label,
+        }
+        employee_rows.append(item)
+        if warning_level == "CRITICAL":
+            employees_below.append(item)
+
+    return {
+        "department": clean_dept or "All Departments",
+        "is_all_departments": clean_dept is None,
+        "reporting_period": reporting_period,
+        "selected_year": year,
+        "selected_month": month,
+        "total_employees": total_employees,
+        "kpis": {
+            "present": present_total,
+            "absent": absent_total,
+            "leave": leave_total,
+            "holiday": holiday_total,
+            "eligible_days": eligible_total,
+            "attendance_pct": overall_att_pct,
+            "absenteeism_pct": overall_abs_pct,
+        },
+        "employee_rows": employee_rows,
+        "employees_below_75": employees_below,
+        "department_summaries": dept_summary_df.to_dict("records"),
+    }
 
 
 

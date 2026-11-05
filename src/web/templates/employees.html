@@ -30,7 +30,7 @@
             <label for="q" class="form-label">Search Employees</label>
             <div style="position: relative;">
                 <input type="text" id="q" name="q" value="{{ q }}"
-                    placeholder="Search by name, employee code (e.g. E001), or department..."
+                    placeholder="Search by name, ID, code (e.g. E001), email or role..."
                     style="width: 100%; padding-left: 38px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round"
@@ -40,14 +40,26 @@
                 </svg>
             </div>
         </div>
-        <div style="display: flex; align-items: center; height: 42px;">
-            <label
-                style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9375rem; color: var(--text-headings); user-select: none;">
-                <input type="checkbox" name="include_inactive" value="1" {% if include_inactive %} checked{% endif %}
-                    style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                Include inactive staff
-            </label>
+
+        <div style="min-width: 180px;">
+            <label for="department" class="form-label">Department</label>
+            <select id="department" name="department" style="width: 100%; height: 42px;">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
         </div>
+
+        <div style="min-width: 160px;">
+            <label for="status" class="form-label">Employment Status</label>
+            <select id="status" name="status" style="width: 100%; height: 42px;">
+                <option value="">All Statuses</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+            </select>
+        </div>
+
         <div style="display: flex; gap: 10px;">
             <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 20px;">
                 Filter
@@ -65,26 +77,37 @@
         style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
             <h2 class="card-title" style="font-size: 1.125rem;">Directory Roster</h2>
-            <p class="card-subtitle">Showing {{ employees|length }} staff member{% if employees|length != 1 %}s{% endif
-                %}</p>
+            <p class="card-subtitle">Showing {{ employees|length }} staff member{% if employees|length != 1 %}s{% endif %}</p>
         </div>
-        {% if q %}
-        <span class="badge"
-            style="background: var(--primary-subtle); color: var(--primary); border: 1px solid var(--primary-border);">
-            Filtered by: "{{ q }}"
-        </span>
-        {% endif %}
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            {% if q %}
+            <span class="badge" style="background: var(--primary-subtle); color: var(--primary); border: 1px solid var(--primary-border);">
+                Keyword: "{{ q }}"
+            </span>
+            {% endif %}
+            {% if selected_department %}
+            <span class="badge" style="background: var(--bg-surface-subtle); color: var(--text-body); border: 1px solid var(--border);">
+                Dept: {{ selected_department }}
+            </span>
+            {% endif %}
+            {% if status_filter %}
+            <span class="badge" style="background: var(--bg-surface-subtle); color: var(--text-body); border: 1px solid var(--border);">
+                Status: {{ status_filter|capitalize }}
+            </span>
+            {% endif %}
+        </div>
     </div>
 
     <div style="overflow-x: auto; width: 100%;">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 120px;">Code</th>
-                    <th>Employee Name</th>
+                    <th style="width: 100px;">Code</th>
+                    <th>Employee & Designation</th>
                     <th>Department</th>
-                    <th style="width: 150px;">Joining Date</th>
-                    <th style="width: 120px; text-align: center;">Status</th>
+                    <th>Contact Info</th>
+                    <th style="width: 120px;">Joining Date</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
                     <th style="width: 220px; text-align: center;">Actions</th>
                 </tr>
             </thead>
@@ -92,9 +115,9 @@
                 {% for emp in employees %}
                 <tr>
                     <td>
-                        <a href="/employees/{{ emp.employee_id }}/analytics"
+                        <a href="/employees/{{ emp.employee_id }}"
                             style="text-decoration: none; font-weight: 700; color: var(--primary);"
-                            title="View analytics">
+                            title="View employee profile & analytics">
                             <span
                                 style="background: var(--primary-subtle); padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--primary-border); font-family: var(--font-mono); font-size: 0.84375rem;">
                                 {{ emp.employee_code }}
@@ -105,16 +128,37 @@
                         <div style="display: flex; align-items: center; gap: 12px;">
                             {{ avatar_circle(emp.employee_name, 'md') }}
                             <div>
-                                <a href="/employees/{{ emp.employee_id }}/analytics"
+                                <a href="/employees/{{ emp.employee_id }}"
                                     style="text-decoration: none; color: var(--text-headings); font-weight: 600;"
-                                    title="View analytics profile">
+                                    title="View employee profile">
                                     {{ emp.employee_name }}
                                 </a>
+                                {% if emp.designation %}
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
+                                    {{ emp.designation }}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </td>
                     <td>
                         <span style="color: var(--text-body); font-weight: 500;">{{ emp.department }}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 0.8125rem;">
+                            {% if emp.email %}
+                            <a href="mailto:{{ emp.email }}" style="color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>{{ emp.email }}</span>
+                            </a>
+                            {% else %}
+                            <span style="color: var(--text-dim); font-style: italic;">No email</span>
+                            {% endif %}
+                            {% if emp.mobile_number %}
+                            <a href="tel:{{ emp.mobile_number }}" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>{{ emp.mobile_number }}</span>
+                            </a>
+                            {% endif %}
+                        </div>
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.875rem;">
                         {{ emp.joining_date }}
@@ -128,10 +172,10 @@
                     </td>
                     <td style="text-align: center;">
                         <div style="display: inline-flex; gap: 6px;">
-                            <a href="/employees/{{ emp.employee_id }}/analytics" class="btn-action"
+                            <a href="/employees/{{ emp.employee_id }}" class="btn-action"
                                 style="color: var(--primary); border-color: var(--primary-border);"
-                                title="View Analytics">
-                                Analytics
+                                title="View Complete Profile & Attendance">
+                                Profile
                             </a>
                             {% if emp.is_active %}
                             <a href="/employees/{{ emp.employee_code }}/edit" class="btn-action"
@@ -152,7 +196,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="empty-state">
                             <div class="empty-state-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -48,7 +48,7 @@ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TEST_NAME, FLASK_SECRET_KEY,
 - Parameterized SQL only (never build SQL with f-strings or string joins).
 - Never use the MySQL root account in the project.
 - Sample data is clearly fake. No real people.
-- Web app: locally it runs on 127.0.0.1 with debug mode OFF. When hosted publicly it must sit behind the host's HTTPS, with debug OFF, served by waitress (never Flask's built-in server), and EVERY page except the login page requires a logged-in user.
+- Web app: locally it runs on 127.0.0.1 with debug mode OFF. When hosted publicly it must sit behind the host's HTTPS, with debug OFF, served by waitress (never Flask's built-in server), and EVERY page except the login page, the public landing page (/welcome - Decision D8), /healthz, and static assets requires a logged-in user.
 - Web app: FLASK_SECRET_KEY comes only from .env, is never printed or hardcoded.
 - Web app: every form that changes data checks a CSRF token kept in the Flask session (no extra packages). Templates rely on Jinja auto-escaping; never use the "safe" filter or Markup on user text.
 - Web app: no SQL and no percentage formulas in src/web. Pages never delete anything.
@@ -71,4 +71,4 @@ pytest. Tests never touch real data: they refuse to run unless the database name
 7. Stop when the task ends.
 
 ## Status (update honestly)
-All planned phases are built and tested. See PROGRESS.md for evidence and README.md for known limitations.
+All planned phases including Phase 12 (Public Landing Page /welcome per Decision D8) are built and tested. 193 automated tests passing. See PROGRESS.md for evidence and README.md for known limitations.

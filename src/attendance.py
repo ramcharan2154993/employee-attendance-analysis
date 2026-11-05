@@ -232,13 +232,19 @@ def record_department_attendance(
 def record_attendance(
     conn: MySQLConnectionAbstract,
     employee_code: str,
-    attendance_date: datetime.date,
+    attendance_date: datetime.date | str,
     status: str,
     user_id: int | None = None,
     username: str | None = None,
 ) -> int:
     """Record daily attendance status for an active employee."""
     from src.audit import log_attendance_action
+
+    if isinstance(attendance_date, str):
+        try:
+            attendance_date = datetime.date.fromisoformat(attendance_date.strip())
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid attendance date '{attendance_date}'.") from exc
 
     if status == "Holiday":
         raise ValueError(
@@ -309,7 +315,7 @@ def record_attendance(
 def update_attendance(
     conn: MySQLConnectionAbstract,
     employee_code: str,
-    attendance_date: datetime.date,
+    attendance_date: datetime.date | str,
     status: str,
     reason: str | None = None,
     user_id: int | None = None,
@@ -317,6 +323,12 @@ def update_attendance(
 ) -> None:
     """Update status of an existing attendance record with audit trail."""
     from src.audit import log_attendance_action
+
+    if isinstance(attendance_date, str):
+        try:
+            attendance_date = datetime.date.fromisoformat(attendance_date.strip())
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid attendance date '{attendance_date}'.") from exc
 
     if status == "Holiday":
         raise ValueError(

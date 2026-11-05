@@ -97,9 +97,24 @@ def new_employee() -> Any:
         name = request.form.get("employee_name", "").strip()
         dept = request.form.get("department", "").strip()
         j_date = request.form.get("joining_date", "").strip() or None
+        email = request.form.get("email", "").strip() or None
+        mobile = request.form.get("mobile_number", "").strip() or None
+        alt_phone = request.form.get("alt_phone", "").strip() or None
+        designation = request.form.get("designation", "").strip() or None
+
         try:
             conn = get_db()
-            add_employee(conn, code, name, dept, joining_date=j_date)
+            add_employee(
+                conn,
+                code,
+                name,
+                dept,
+                joining_date=j_date,
+                email=email,
+                mobile_number=mobile,
+                alt_phone=alt_phone,
+                designation=designation,
+            )
             flash(f"Employee {code} added.")
             return redirect("/employees", code=302)
         except ValueError as exc:
@@ -113,6 +128,10 @@ def new_employee() -> Any:
                     name=name,
                     department=dept,
                     joining_date=j_date or "",
+                    email=email or "",
+                    mobile_number=mobile or "",
+                    alt_phone=alt_phone or "",
+                    designation=designation or "",
                     error=f"Error: {exc}",
                 ),
                 400,
@@ -127,6 +146,10 @@ def new_employee() -> Any:
         name="",
         department="",
         joining_date=datetime.date.today().isoformat(),
+        email="",
+        mobile_number="",
+        alt_phone="",
+        designation="",
         error=None,
     )
 
@@ -144,6 +167,11 @@ def edit_employee(code: str) -> Any:
         name = request.form.get("employee_name", "").strip()
         dept = request.form.get("department", "").strip()
         j_date = request.form.get("joining_date", "").strip() or None
+        email = request.form.get("email", "").strip() or None
+        mobile = request.form.get("mobile_number", "").strip() or None
+        alt_phone = request.form.get("alt_phone", "").strip() or None
+        designation = request.form.get("designation", "").strip() or None
+
         try:
             update_employee(
                 conn,
@@ -151,6 +179,11 @@ def edit_employee(code: str) -> Any:
                 employee_name=name,
                 department=dept,
                 joining_date=j_date,
+                email=email,
+                mobile_number=mobile,
+                alt_phone=alt_phone,
+                designation=designation,
+                update_contacts=True,
             )
             flash(f"Employee {emp_code} updated.")
             return redirect("/employees", code=302)
@@ -165,6 +198,10 @@ def edit_employee(code: str) -> Any:
                     name=name,
                     department=dept,
                     joining_date=j_date or str(emp["joining_date"]),
+                    email=email or "",
+                    mobile_number=mobile or "",
+                    alt_phone=alt_phone or "",
+                    designation=designation or "",
                     error=f"Error: {exc}",
                 ),
                 400,
@@ -179,6 +216,10 @@ def edit_employee(code: str) -> Any:
         name=emp["employee_name"],
         department=emp["department"],
         joining_date=str(emp["joining_date"]),
+        email=emp.get("email") or "",
+        mobile_number=emp.get("mobile_number") or "",
+        alt_phone=emp.get("alt_phone") or "",
+        designation=emp.get("designation") or "",
         error=None,
     )
 
@@ -531,5 +572,64 @@ def new_holiday() -> Any:
         holiday_date="",
         error=None,
     )
+
+
+@write_bp.route("/alerts/<int:alert_id>/review", methods=["POST"])
+def review_alert(alert_id: int) -> Any:
+    """Mark an attendance warning as reviewed with optional reviewer notes."""
+    conn = get_db()
+    from src.alerts import mark_alert_reviewed
+
+    notes = request.form.get("notes", "").strip()
+    user = g.get("current_user")
+    reviewer_id = user.get("user_id") if user else None
+
+    try:
+        mark_alert_reviewed(conn, alert_id, user_id=reviewer_id, notes=notes)
+        flash("Alert successfully marked as reviewed.")
+    except Exception as exc:
+        flash(f"Error reviewing alert: {exc}")
+
+    redirect_to = request.form.get("return_url") or request.referrer or "/alerts"
+    return redirect(redirect_to, code=302)
+
+
+@write_bp.route("/alerts/settings/threshold", methods=["POST"])
+@role_required("Admin")
+def update_threshold() -> Any:
+    """Update critical attendance threshold in system_settings (Admin only)."""
+    conn = get_db()
+    from src.alerts import set_critical_threshold
+
+    threshold_str = request.form.get("threshold", "").strip()
+    try:
+        val = float(threshold_str)
+        set_critical_threshold(conn, val)
+        flash(f"Critical attendance warning threshold updated to {val:.1f}%.")
+    except ValueError as exc:
+        flash(f"Invalid threshold value: {exc}")
+
+    return redirect(request.referrer or "/alerts", code=302)
+
+
+@write_bp.route("/alerts/sync", methods=["POST"])
+def sync_alerts() -> Any:
+    """Synchronize monthly attendance alerts on demand."""
+    import calendar
+    conn = get_db()
+    from src.alerts import sync_monthly_attendance_alerts
+
+    year_str = request.form.get("year", "2026").strip()
+    month_str = request.form.get("month", "9").strip()
+    try:
+        year = int(year_str)
+        month = int(month_str)
+        count = sync_monthly_attendance_alerts(conn, year, month)
+        flash(f"Synchronized {count} alerts for {calendar.month_name[month]} {year}.")
+    except Exception as exc:
+        flash(f"Failed to synchronize alerts: {exc}")
+
+    return redirect(f"/alerts?year={year}&month={month}", code=302)
+
 
 

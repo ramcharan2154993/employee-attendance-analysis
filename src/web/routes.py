@@ -2,6 +2,7 @@
 
 import calendar
 import datetime
+import io
 from pathlib import Path
 import re
 from typing import Any
@@ -12,16 +13,20 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     session,
     url_for,
 )
 from src.analysis import (
     absenteeism_ranking,
+    analyze_employee_patterns,
+    build_employee_calendar_matrix,
     department_summary,
     employee_summary,
     get_available_months,
     get_dashboard_summary,
+    get_department_report_data,
     get_employee_analytics_data,
     load_attendance_df,
 )
@@ -46,6 +51,14 @@ from src.reports import (
     generate_monthly_report,
 )
 from src.web import get_db, login_required, role_required
+from src.alerts import (
+    classify_attendance_level,
+    count_attendance_alerts,
+    get_alert_metrics_summary,
+    get_critical_threshold,
+    list_attendance_alerts,
+    sync_monthly_attendance_alerts,
+)
 
 bp = Blueprint("routes", __name__)
 
@@ -178,6 +191,28 @@ def index() -> str:
     metrics = get_dashboard_summary(conn, year=req_year, month=req_month)
     recent_employees = get_recent_employees(conn, limit=5)
 
+    # Executive alert summary & department health breakdown
+    threshold = get_critical_threshold(conn)
+    try:
+        sync_monthly_attendance_alerts(conn, metrics["year"], metrics["month"])
+    except Exception:
+        pass
+
+    alert_metrics = get_alert_metrics_summary(conn, metrics["year"], metrics["month"])
+    recent_alerts = list_attendance_alerts(
+        conn,
+        year=metrics["year"],
+        month=metrics["month"],
+        limit=5,
+    )
+    dept_report = get_department_report_data(
+        conn,
+        department=None,
+        year=metrics["year"],
+        month=metrics["month"],
+        critical_threshold=threshold,
+    )
+
     output_dir = current_app.config["OUTPUT_DIR"]
     try:
         export_charts(conn, metrics["year"], metrics["month"], output_dir=output_dir)
@@ -197,6 +232,11 @@ def index() -> str:
         has_chart=has_chart,
         has_month_chart=has_month_chart,
         chart_month_file=chart_month_file,
+        threshold=threshold,
+        alert_metrics=alert_metrics,
+        recent_alerts=recent_alerts,
+        departments=dept_report.get("department_summaries", []),
+        low_attendants=dept_report.get("employees_below_75", []),
     )
 
 
@@ -204,19 +244,38 @@ def index() -> str:
 
 @bp.route("/employees", methods=["GET"])
 def employees_view() -> str:
-    """Render employees list with search and inactive inclusion filters."""
+    """Render employees list with search, department, and employment status filters."""
     conn = get_db()
     q = request.args.get("q", "").strip()
     include_inactive = request.args.get("include_inactive") == "1"
+    dept_filter = request.args.get("department", "").strip() or None
+    status_filter = request.args.get("status", "").strip()
+
+    effective_include_inactive = include_inactive or status_filter in ("inactive", "all")
+
     if q:
-        employees = search_employees(conn, q, include_inactive=include_inactive)
+        employees = search_employees(
+            conn, q, include_inactive=effective_include_inactive, department=dept_filter
+        )
     else:
-        employees = list_employees(conn, include_inactive=include_inactive)
+        employees = list_employees(
+            conn, include_inactive=effective_include_inactive, department=dept_filter
+        )
+
+    if status_filter == "inactive":
+        employees = [e for e in employees if not e["is_active"]]
+    elif status_filter == "active":
+        employees = [e for e in employees if e["is_active"]]
+
+    departments = list_departments(conn)
     return render_template(
         "employees.html",
         employees=employees,
         q=q,
         include_inactive=include_inactive,
+        selected_department=dept_filter,
+        status_filter=status_filter,
+        departments=departments,
     )
 
 
@@ -358,6 +417,36 @@ def build_employee_analytics_data(
         r for r in period_records if r["status"] in ("Absent", "Leave")
     ][:15]
 
+    threshold = get_critical_threshold(conn)
+    patterns = analyze_employee_patterns(
+        period_records,
+        monthly_trends,
+        critical_threshold=threshold,
+    )
+
+    # Determine calendar month to display
+    if req_year is not None and req_month is not None:
+        cal_year = req_year
+        cal_month = req_month
+    elif monthly_trends:
+        latest_trend = monthly_trends[0]
+        cal_year = latest_trend["year"]
+        cal_month = latest_trend["month"]
+    else:
+        cal_year = 2026
+        cal_month = 9
+
+    cal_records = [
+        r for r in all_emp_records
+        if r["attendance_date"].year == cal_year and r["attendance_date"].month == cal_month
+    ]
+    calendar_matrix = build_employee_calendar_matrix(cal_year, cal_month, cal_records)
+
+    warning_level, warning_label = classify_attendance_level(
+        p_att_pct,
+        critical_threshold=threshold,
+    )
+
     return {
         "employee": emp,
         "reporting_period": selected_period_label,
@@ -393,9 +482,15 @@ def build_employee_analytics_data(
         "chart_trends": chart_trends,
         "recent_exceptions": recent_exceptions,
         "records": period_records,
+        "patterns": patterns,
+        "calendar_matrix": calendar_matrix,
+        "warning_level": warning_level,
+        "warning_label": warning_label,
+        "threshold": threshold,
     }
 
 
+@bp.route("/employees/<int:employee_id>", methods=["GET"])
 @bp.route("/employees/<int:employee_id>/analytics", methods=["GET"])
 def employee_analytics_view(employee_id: int) -> str:
     """Render comprehensive analytics profile for an individual employee."""
@@ -453,6 +548,166 @@ def employee_analytics_view(employee_id: int) -> str:
         data=analytics_data,
         trend_chart=trend_filename,
         dist_chart=dist_filename,
+    )
+
+
+@bp.route("/employees/<int:employee_id>/report/pdf", methods=["GET"])
+def employee_report_pdf_download(employee_id: int) -> Any:
+    """Download individual employee attendance statement as a publication-grade PDF."""
+    conn = get_db()
+    period = request.args.get("period", "").strip() or None
+    year = None
+    month = None
+
+    if period and period != "all":
+        parts = period.split("-")
+        if len(parts) == 2:
+            try:
+                year = int(parts[0])
+                month = int(parts[1])
+            except ValueError:
+                pass
+
+    from src.employees import get_employee_by_id
+
+    emp = get_employee_by_id(conn, employee_id)
+    if not emp:
+        abort(404)
+
+    from src.reports_pdf import generate_employee_pdf_report
+
+    pdf_bytes = generate_employee_pdf_report(conn, employee_id, year=year, month=month)
+    period_str = f"{year:04d}_{month:02d}" if year and month else "all_time"
+    filename = f"Attendance_Report_{emp['employee_code']}_{period_str}.pdf"
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@bp.route("/employees/<int:employee_id>/report/excel", methods=["GET"])
+def employee_report_excel_download(employee_id: int) -> Any:
+    """Download individual employee attendance spreadsheet (.xlsx)."""
+    conn = get_db()
+    period = request.args.get("period", "").strip() or None
+    year = None
+    month = None
+
+    if period and period != "all":
+        parts = period.split("-")
+        if len(parts) == 2:
+            try:
+                year = int(parts[0])
+                month = int(parts[1])
+            except ValueError:
+                pass
+
+    from src.employees import get_employee_by_id
+
+    emp = get_employee_by_id(conn, employee_id)
+    if not emp:
+        abort(404)
+
+    from src.reports_excel import generate_employee_excel_report
+
+    excel_bytes = generate_employee_excel_report(conn, employee_id, year=year, month=month)
+    period_str = f"{year:04d}_{month:02d}" if year and month else "all_time"
+    filename = f"Attendance_Report_{emp['employee_code']}_{period_str}.xlsx"
+
+    return send_file(
+        io.BytesIO(excel_bytes),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@bp.route("/reports/department/pdf", methods=["GET"])
+@bp.route("/department/report/pdf", methods=["GET"])
+def department_report_pdf_download() -> Any:
+    """Download department-wide or organization-wide attendance audit report as PDF."""
+    conn = get_db()
+    department = request.args.get("department", "").strip() or None
+    period = request.args.get("period", "").strip() or None
+    year = None
+    month = None
+
+    if period and period != "all":
+        parts = period.split("-")
+        if len(parts) == 2:
+            try:
+                year = int(parts[0])
+                month = int(parts[1])
+            except ValueError:
+                pass
+    else:
+        year_str = request.args.get("year", "").strip()
+        month_str = request.args.get("month", "").strip()
+        if year_str and month_str:
+            try:
+                year = int(year_str)
+                month = int(month_str)
+            except ValueError:
+                pass
+
+    from src.reports_pdf import generate_department_pdf_report
+
+    pdf_bytes = generate_department_pdf_report(conn, department=department, year=year, month=month)
+    dept_slug = department.replace(" ", "_") if department else "All_Departments"
+    period_str = f"{year:04d}_{month:02d}" if year and month else "all_time"
+    filename = f"Department_Attendance_{dept_slug}_{period_str}.pdf"
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@bp.route("/reports/department/excel", methods=["GET"])
+@bp.route("/department/report/excel", methods=["GET"])
+def department_report_excel_download() -> Any:
+    """Download department-wide or organization-wide attendance report as Excel spreadsheet (.xlsx)."""
+    conn = get_db()
+    department = request.args.get("department", "").strip() or None
+    period = request.args.get("period", "").strip() or None
+    year = None
+    month = None
+
+    if period and period != "all":
+        parts = period.split("-")
+        if len(parts) == 2:
+            try:
+                year = int(parts[0])
+                month = int(parts[1])
+            except ValueError:
+                pass
+    else:
+        year_str = request.args.get("year", "").strip()
+        month_str = request.args.get("month", "").strip()
+        if year_str and month_str:
+            try:
+                year = int(year_str)
+                month = int(month_str)
+            except ValueError:
+                pass
+
+    from src.reports_excel import generate_department_excel_report
+
+    excel_bytes = generate_department_excel_report(conn, department=department, year=year, month=month)
+    dept_slug = department.replace(" ", "_") if department else "All_Departments"
+    period_str = f"{year:04d}_{month:02d}" if year and month else "all_time"
+    filename = f"Department_Attendance_{dept_slug}_{period_str}.xlsx"
+
+    return send_file(
+        io.BytesIO(excel_bytes),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename,
     )
 
 
@@ -854,3 +1109,98 @@ def serve_chart_file(filename: str) -> Any:
     response = send_from_directory(output_dir, filename)
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return response
+
+
+@bp.route("/alerts", methods=["GET"])
+def alerts_dashboard() -> Any:
+    """Render smart attendance warning center with multi-tier alerts and review tracking."""
+    conn = get_db()
+
+    months_list = get_available_months(conn)
+    available_years = sorted(list(set(y for y, _, _ in months_list)), reverse=True)
+    if not available_years:
+        available_years = [2026]
+
+    year_str = request.args.get("year", "").strip()
+    month_str = request.args.get("month", "").strip()
+    dept = request.args.get("department", "").strip() or None
+    level = request.args.get("level", "").strip() or None
+    reviewed_param = request.args.get("reviewed", "").strip().lower()
+    page_str = request.args.get("page", "1").strip()
+
+    is_reviewed: bool | None = None
+    if reviewed_param == "true":
+        is_reviewed = True
+    elif reviewed_param == "false":
+        is_reviewed = False
+
+    try:
+        page = max(1, int(page_str))
+    except (ValueError, TypeError):
+        page = 1
+    per_page = 25
+    offset = (page - 1) * per_page
+
+    year: int | None = None
+    month: int | None = None
+    if year_str:
+        try:
+            year = int(year_str)
+        except (ValueError, TypeError):
+            year = None
+    if month_str:
+        try:
+            month = int(month_str)
+        except (ValueError, TypeError):
+            month = None
+
+    if year is None and month is None:
+        if months_list:
+            year, month, _ = months_list[0]
+        else:
+            year, month = 2026, 9
+
+    # Idempotent sync for selected period
+    if year and month:
+        sync_monthly_attendance_alerts(conn, year, month)
+
+    threshold = get_critical_threshold(conn)
+    metrics = get_alert_metrics_summary(conn, year, month)
+    alerts = list_attendance_alerts(
+        conn,
+        year=year,
+        month=month,
+        department=dept,
+        warning_level=level,
+        is_reviewed=is_reviewed,
+        limit=per_page,
+        offset=offset,
+    )
+    total_count = count_attendance_alerts(
+        conn,
+        year=year,
+        month=month,
+        department=dept,
+        warning_level=level,
+        is_reviewed=is_reviewed,
+    )
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    departments = list_departments(conn)
+
+    return render_template(
+        "alerts.html",
+        alerts=alerts,
+        metrics=metrics,
+        threshold=threshold,
+        selected_year=year,
+        selected_month=month,
+        selected_dept=dept or "all",
+        selected_level=level or "all",
+        selected_reviewed=reviewed_param or "all",
+        available_years=available_years,
+        departments=departments,
+        current_page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        months_list=months_list,
+    )

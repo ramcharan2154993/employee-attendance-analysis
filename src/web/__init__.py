@@ -151,8 +151,19 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                 session["csrf_token"] = secrets.token_hex(16)
             return session["csrf_token"]
 
+        def unreviewed_alerts_count() -> int:
+            if not g.get("current_user"):
+                return 0
+            try:
+                db_conn = get_db()
+                from src.alerts import count_attendance_alerts
+                return count_attendance_alerts(db_conn, is_reviewed=False)
+            except Exception:
+                return 0
+
         return {
             "csrf_token": csrf_token,
+            "unreviewed_alerts_count": unreviewed_alerts_count,
             "current_user": g.get("current_user"),
             "APP_NAME": config.APP_NAME,
             "APP_TAGLINE": config.APP_TAGLINE,

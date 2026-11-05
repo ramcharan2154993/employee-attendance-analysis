@@ -72,7 +72,7 @@
             </div>
 
             <div>
-                <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 22px;">
+                <button type="submit" class="btn btn-primary btn-sm">
                     Create Account
                 </button>
             </div>
@@ -121,11 +121,11 @@
                         <form action="/users/{{ u.user_id }}/toggle" method="POST" style="display: inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             {% if u.is_active %}
-                            <button type="submit" class="btn-action" style="color: var(--absent); border-color: var(--absent-border);">
+                            <button type="submit" class="btn-action btn-action-danger">
                                 Deactivate
                             </button>
                             {% else %}
-                            <button type="submit" class="btn-action" style="color: var(--present); border-color: var(--present-border);">
+                            <button type="submit" class="btn-action btn-action-primary">
                                 Activate
                             </button>
                             {% endif %}

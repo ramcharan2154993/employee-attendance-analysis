@@ -91,6 +91,15 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                 "Production mode requires a SECRET_KEY with minimum length of 32 characters."
             )
 
+    # Auto-ensure database schema and migrations are verified on startup
+    if not app.config.get("TESTING"):
+        try:
+            from src.db import apply_schema
+            target_db = app.config.get("DATABASE_NAME") or config.DB_NAME
+            apply_schema(target_db)
+        except Exception as exc:
+            app.logger.warning("Could not auto-apply schema migrations on startup: %s", exc)
+
     @app.teardown_appcontext
     def teardown_db(exception: Any = None) -> None:
         db = g.pop("db", None)

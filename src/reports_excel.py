@@ -6,10 +6,22 @@ and departments using XlsxWriter.
 
 import datetime
 import io
+import math
 from typing import Any
 import xlsxwriter
 
 from src.analysis import get_department_report_data, get_employee_analytics_data
+
+
+def _is_valid_float(val: Any) -> bool:
+    """Check if value is a valid non-NaN, non-infinite number."""
+    if val is None:
+        return False
+    try:
+        f = float(val)
+        return not (math.isnan(f) or math.isinf(f))
+    except (ValueError, TypeError):
+        return False
 
 
 def generate_employee_excel_report(
@@ -37,7 +49,7 @@ def generate_employee_excel_report(
     )
 
     output = io.BytesIO()
-    wb = xlsxwriter.Workbook(output, {"in_memory": True})
+    wb = xlsxwriter.Workbook(output, {"in_memory": True, "nan_inf_to_errors": True})
 
     # Formats
     fmt_title = wb.add_format({
@@ -185,8 +197,8 @@ def generate_employee_excel_report(
     ws_sum.write(11, 2, kpis["absent"], fmt_kpi_num)
     ws_sum.write(11, 3, kpis["leave"], fmt_kpi_num)
     ws_sum.write(11, 4, kpis["holiday"], fmt_kpi_num)
-    if kpis["attendance_pct"] is not None:
-        ws_sum.write(11, 5, kpis["attendance_pct"] / 100.0, fmt_pct)
+    if _is_valid_float(kpis.get("attendance_pct")):
+        ws_sum.write(11, 5, float(kpis["attendance_pct"]) / 100.0, fmt_pct)
     else:
         ws_sum.write(11, 5, "N/A", fmt_kpi_num)
 
@@ -217,9 +229,9 @@ def generate_employee_excel_report(
             ws_sum.write(row_idx, 2, m_item["absent"], fmt_val_center)
             ws_sum.write(row_idx, 3, m_item["leave"], fmt_val_center)
             ws_sum.write(row_idx, 4, m_item["eligible_days"], fmt_val_center)
-            m_pct = m_item["attendance_pct"]
-            if m_pct is not None:
-                ws_sum.write(row_idx, 5, m_pct / 100.0, fmt_pct)
+            m_pct = m_item.get("attendance_pct")
+            if _is_valid_float(m_pct):
+                ws_sum.write(row_idx, 5, float(m_pct) / 100.0, fmt_pct)
             else:
                 ws_sum.write(row_idx, 5, "N/A", fmt_val_center)
 
@@ -279,7 +291,7 @@ def generate_department_excel_report(
     dept_summaries = data.get("department_summaries", [])
 
     output = io.BytesIO()
-    wb = xlsxwriter.Workbook(output, {"in_memory": True})
+    wb = xlsxwriter.Workbook(output, {"in_memory": True, "nan_inf_to_errors": True})
 
     # Common Styles
     fmt_title = wb.add_format({
@@ -403,8 +415,8 @@ def generate_department_excel_report(
     ws_sum.write(5, 2, kpis["present"], fmt_kpi_num)
     ws_sum.write(5, 3, kpis["absent"], fmt_kpi_num)
     ws_sum.write(5, 4, kpis["leave"], fmt_kpi_num)
-    if kpis["attendance_pct"] is not None:
-        ws_sum.write(5, 5, kpis["attendance_pct"] / 100.0, fmt_pct)
+    if _is_valid_float(kpis.get("attendance_pct")):
+        ws_sum.write(5, 5, float(kpis["attendance_pct"]) / 100.0, fmt_pct)
     else:
         ws_sum.write(5, 5, "N/A", fmt_kpi_num)
 
@@ -414,7 +426,12 @@ def generate_department_excel_report(
         ws_sum.write(8, 0, "Alert Status", fmt_label)
         ws_sum.merge_range(8, 1, 8, 5, f"CRITICAL: {len(below_75)} employee(s) have attendance below 75%", fmt_warn_critical)
         ws_sum.write(9, 0, "Flagged Staff", fmt_label)
-        flagged_summary = "; ".join(f"{e['employee_name']} ({e['employee_code']}: {e['attendance_pct']:.1f}%)" for e in below_75)
+        flagged_summary = "; ".join(
+            f"{e['employee_name']} ({e['employee_code']}: {e['attendance_pct']:.1f}%)"
+            if _is_valid_float(e.get("attendance_pct"))
+            else f"{e['employee_name']} ({e['employee_code']}: N/A)"
+            for e in below_75
+        )
         ws_sum.merge_range(9, 1, 9, 5, flagged_summary, fmt_val)
     else:
         ws_sum.write(8, 0, "Alert Status", fmt_label)
@@ -433,9 +450,9 @@ def generate_department_excel_report(
             ws_sum.write(row_idx, 2, d_item["absent"], fmt_val_center)
             ws_sum.write(row_idx, 3, d_item["leave"], fmt_val_center)
             ws_sum.write(row_idx, 4, d_item["eligible_days"], fmt_val_center)
-            d_pct = d_item["attendance_pct"]
-            if d_pct is not None:
-                ws_sum.write(row_idx, 5, d_pct / 100.0, fmt_pct)
+            d_pct = d_item.get("attendance_pct")
+            if _is_valid_float(d_pct):
+                ws_sum.write(row_idx, 5, float(d_pct) / 100.0, fmt_pct)
             else:
                 ws_sum.write(row_idx, 5, "N/A", fmt_val_center)
 
@@ -485,9 +502,9 @@ def generate_department_excel_report(
         ws_emp.write(idx, 7, row["holiday"], fmt_val_center)
         ws_emp.write(idx, 8, row["eligible_days"], fmt_val_center)
 
-        pct = row["attendance_pct"]
-        if pct is not None:
-            ws_emp.write(idx, 9, pct / 100.0, fmt_pct)
+        pct = row.get("attendance_pct")
+        if _is_valid_float(pct):
+            ws_emp.write(idx, 9, float(pct) / 100.0, fmt_pct)
         else:
             ws_emp.write(idx, 9, "N/A", fmt_val_center)
 

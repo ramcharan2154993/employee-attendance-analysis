@@ -16,11 +16,10 @@
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <a href="/reports/department/pdf?year={{ year|default(2026) }}&month={{ month|default(9) }}" class="btn btn-secondary btn-sm" title="Download Official Department Audit Statement PDF">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            Download PDF Report
+            Export PDF
         </a>
         <a href="/reports/department/excel?year={{ year|default(2026) }}&month={{ month|default(9) }}" class="btn btn-secondary btn-sm" title="Download Department Excel Spreadsheet">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -44,52 +43,40 @@
 
 {% if request.path.startswith('/report') %}
 <!-- Monthly Report Filter Toolbar -->
-<div class="rpt-card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
-    <form action="/report" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-        <div>
-            <label for="rep_year" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Year:</label>
-            <select id="rep_year" name="year" style="width: 130px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input); font-weight: 500;">
-                {% for y in available_years|default([2026]) %}
-                <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div>
-            <label for="rep_month" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">Month:</label>
-            <select id="rep_month" name="month" style="width: 150px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input); font-weight: 500;">
-                {% set month_names = [
-                    (1, "January"), (2, "February"), (3, "March"), (4, "April"),
-                    (5, "May"), (6, "June"), (7, "July"), (8, "August"),
-                    (9, "September"), (10, "October"), (11, "November"), (12, "December")
-                ] %}
-                {% for m_num, m_name in month_names %}
-                <option value="{{ m_num }}" {% if month == m_num %}selected{% endif %}>{{ m_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 18px;">Update Report</button>
+<div style="margin-bottom: 16px;">
+    <form action="/report" method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Year</span>
+        <select id="rep_year" name="year" style="width: 100px; height: 36px;">
+            {% for y in available_years|default([2026]) %}
+            <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Month</span>
+        <select id="rep_month" name="month" style="width: 130px; height: 36px;">
+            {% set month_names = [
+                (1, "January"), (2, "February"), (3, "March"), (4, "April"),
+                (5, "May"), (6, "June"), (7, "July"), (8, "August"),
+                (9, "September"), (10, "October"), (11, "November"), (12, "December")
+            ] %}
+            {% for m_num, m_name in month_names %}
+            <option value="{{ m_num }}" {% if month == m_num %}selected{% endif %}>{{ m_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Update Report</button>
     </form>
 </div>
 {% elif request.path.startswith('/summary') or request.path.startswith('/ranking') %}
-<!-- Date Range Filter Toolbar -->
-<div class="rpt-card" style="margin-bottom: 1.25rem; padding: 1.25rem;">
-    <form action="{{ request.path }}" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-        <div>
-            <label for="start" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">From Date:</label>
-            <input type="date" id="start" name="start" value="{{ start }}" style="width: 160px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input);">
-        </div>
-        <div>
-            <label for="end" style="display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase;">To Date:</label>
-            <input type="date" id="end" name="end" value="{{ end }}" style="width: 160px; height: 38px; padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-input);">
-        </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 18px;">Filter</button>
-            {% if start or end %}
-            <a href="{{ request.path }}" class="btn btn-secondary" style="height: 38px; padding: 8px 16px; text-decoration: none;">Clear</a>
-            {% endif %}
-        </div>
-    </form>
-</div>
+<!-- Slim Date Range Filter Row -->
+<form action="{{ request.path }}" method="GET" style="display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;">
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">From</span>
+    <input type="date" id="start" name="start" value="{{ start }}" style="width: 140px; height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">To</span>
+    <input type="date" id="end" name="end" value="{{ end }}" style="width: 140px; height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    {% if start or end %}
+    <a href="{{ request.path }}" style="font-size: 13px; color: var(--text-muted); text-decoration: underline; margin-left: 2px;">Clear</a>
+    {% endif %}
+</form>
 {% endif %}
 
 
@@ -100,22 +87,19 @@
 <div class="rpt-kpi-grid">
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
-            <span class="rpt-kpi-label">Employees Counted</span>
-            <span class="rpt-kpi-chip" style="background: var(--primary-subtle); color: var(--primary);">Staff</span>
+            <span class="rpt-kpi-label">Employees</span>
         </div>
         <div class="rpt-kpi-value">{{ total_employees }}</div>
     </div>
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
-            <span class="rpt-kpi-label">Total Eligible Days</span>
-            <span class="rpt-kpi-chip" style="background: var(--bg-surface-subtle); color: var(--text-muted);">Workdays</span>
+            <span class="rpt-kpi-label">Eligible Days</span>
         </div>
         <div class="rpt-kpi-value">{{ total_eligible }}</div>
     </div>
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
-            <span class="rpt-kpi-label">Overall Attendance</span>
-            <span class="rpt-kpi-chip" style="background: #f0fdf4; color: #16a34a;">Aggregate</span>
+            <span class="rpt-kpi-label">Attendance %</span>
         </div>
         <div class="rpt-kpi-value" style="color: #10b981;">
             {% if overall_att is not none %}{{ "%.2f"|format(overall_att) }}%{% else %}N/A{% endif %}
@@ -123,10 +107,9 @@
     </div>
     <div class="rpt-kpi-card">
         <div class="rpt-kpi-top">
-            <span class="rpt-kpi-label">Overall Absenteeism</span>
-            <span class="rpt-kpi-chip" style="background: #fef2f2; color: #ef4444;">Aggregate</span>
+            <span class="rpt-kpi-label">Absenteeism %</span>
         </div>
-        <div class="rpt-kpi-value" style="color: {% if overall_abs and overall_abs > 15 %}#ef4444{% else %}#334155{% endif %};">
+        <div class="rpt-kpi-value" style="color: {% if overall_abs and overall_abs > 15 %}#ef4444{% else %}var(--text-headings){% endif %};">
             {% if overall_abs is not none %}{{ "%.2f"|format(overall_abs) }}%{% else %}N/A{% endif %}
         </div>
     </div>
@@ -145,18 +128,18 @@
 
     {% if rows %}
     <div class="rpt-table-container">
-        <table class="rpt-table">
+        <table class="rpt-table" style="table-layout: auto; width: 100%;">
             <thead>
                 <tr>
-                    <th>Employee</th>
-                    <th>Department</th>
-                    <th class="rpt-num">Present</th>
-                    <th class="rpt-num">Absent</th>
-                    <th class="rpt-num">Leave</th>
-                    <th class="rpt-num">Holiday</th>
-                    <th class="rpt-num">Eligible</th>
-                    <th style="min-width: 140px;">Attendance %</th>
-                    <th style="min-width: 140px;">Absenteeism %</th>
+                    <th style="min-width: 160px;">Employee</th>
+                    <th style="min-width: 100px;">Department</th>
+                    <th class="rpt-num" style="width: 70px;">Present</th>
+                    <th class="rpt-num" style="width: 70px;">Absent</th>
+                    <th class="rpt-num" style="width: 70px;">Leave</th>
+                    <th class="rpt-num" style="width: 70px;">Holiday</th>
+                    <th class="rpt-num" style="width: 70px;">Eligible</th>
+                    <th style="min-width: 130px;">Attendance %</th>
+                    <th class="rpt-num" style="min-width: 100px;">Absenteeism %</th>
                 </tr>
             </thead>
             <tbody>
@@ -181,16 +164,16 @@
                         <span class="rpt-dept-chip">{{ r.department }}</span>
                     </td>
                     <td class="rpt-num">
-                        <span class="rpt-pill rpt-pill-present"><span class="rpt-pill-dot"></span>{{ r.present }}</span>
+                        <span class="rpt-pill rpt-pill-present">{{ r.present }}</span>
                     </td>
                     <td class="rpt-num">
-                        <span class="rpt-pill rpt-pill-absent"><span class="rpt-pill-dot"></span>{{ r.absent }}</span>
+                        <span class="rpt-pill rpt-pill-absent">{{ r.absent }}</span>
                     </td>
                     <td class="rpt-num">
-                        <span class="rpt-pill rpt-pill-leave"><span class="rpt-pill-dot"></span>{{ r.leave }}</span>
+                        <span class="rpt-pill rpt-pill-leave">{{ r.leave }}</span>
                     </td>
                     <td class="rpt-num">
-                        <span class="rpt-pill rpt-pill-holiday"><span class="rpt-pill-dot"></span>{{ r.holiday }}</span>
+                        <span class="rpt-pill rpt-pill-holiday">{{ r.holiday }}</span>
                     </td>
                     <td class="rpt-num" style="font-weight: 600;">
                         {{ r.eligible_days }}
@@ -212,19 +195,12 @@
                             <span class="rpt-badge-na">N/A</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="rpt-num">
                         {% if r.absenteeism_pct is not none and not r.absenteeism_pct != r.absenteeism_pct %}
                             {% set val = r.absenteeism_pct %}
-                            {% set tier_cls = 'rpt-progress-green' if val <= 5 else ('rpt-progress-amber' if val <= 15 else 'rpt-progress-red') %}
-                            {% set width_pct = [0, [100, val]|min]|max %}
-                            <div class="rpt-rate-container">
-                                <div class="rpt-rate-val">
-                                    <span>{{ "%.2f"|format(val) }}%</span>
-                                </div>
-                                <div class="rpt-progress-track">
-                                    <div class="rpt-progress-fill {{ tier_cls }}" style="width: {{ width_pct }}%;"></div>
-                                </div>
-                            </div>
+                            <span style="font-weight: 600; font-variant-numeric: tabular-nums; color: {% if val > 15 %}#dc2626{% elif val > 5 %}#d97706{% else %}#059669{% endif %};">
+                                {{ "%.2f"|format(val) }}%
+                            </span>
                         {% else %}
                             <span class="rpt-badge-na">N/A</span>
                         {% endif %}
